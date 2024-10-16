@@ -115,6 +115,54 @@ mlsErrorCode_t mlsMotorPIDSetKd(motorPIDHandle_t handle, float Kd);
 mlsErrorCode_t mlsMotorPIDSetSetPoint(motorPIDHandle_t handle, float setPoint);
 
 /*
+ * @brief   Get Kp.
+ *
+ * @param   handle Handle structure.
+ * @param   *Kp Pointer of Kp.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDGetKp(motorPIDHandle_t handle, float *Kp);
+
+/*
+ * @brief   Get Ki.
+ *
+ * @param   handle Handle structure.
+ * @param   *Ki Pointer of Ki.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDGetKi(motorPIDHandle_t handle, float *Ki);
+
+/*
+ * @brief   Get Kd.
+ *
+ * @param   handle Handle structure.
+ * @param   *Kd Pointer of Kd.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDGetKd(motorPIDHandle_t handle, float *Kd);
+
+/*
+ * @brief   Get Set Point.
+ *
+ * @param   handle Handle structure.
+ * @param   *setPoint Pointer of set point.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDGetSetPoint(motorPIDHandle_t handle, float *setPoint);
+
+/*
  * @brief   Get real value.
  *
  * @param   handle Handle structure.

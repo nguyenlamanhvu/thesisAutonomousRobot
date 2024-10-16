@@ -635,4 +635,156 @@ mlsErrorCode_t mlsPeriphMotorRightPIDGetRealValue(float *realValue)
 
 	return MLS_SUCCESS;
 }
+
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetKp(float *Kp)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetKp(motorLeftPIDHandle, Kp);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetKi(float *Ki)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetKi(motorLeftPIDHandle, Ki);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetKd(float *Kd)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetKd(motorLeftPIDHandle, Kd);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetSetPoint(float *setPoint)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetSetPoint(motorLeftPIDHandle, setPoint);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDGetKp(float *Kp)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetKp(motorRightPIDHandle, Kp);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDGetKi(float *Ki)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetKi(motorRightPIDHandle, Ki);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDGetKd(float *Kd)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetKd(motorRightPIDHandle, Kd);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetSetPoint(motorRightPIDHandle, setPoint);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
 /**@}*/

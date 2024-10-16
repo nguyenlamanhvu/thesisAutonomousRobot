@@ -93,6 +93,8 @@ uint8_t DataToSend[36];
 uint8_t i;
 #elif (USE_UART_GUI == 1)
 FloatByteArray uartData;
+static uint8_t getLeftParameter = 0;
+static uint8_t getRightParameter = 0;
 #endif
 /********** Local function definition section *********************************/
 static sensor_msgs::Imu BaseControlGetIMU(void)
@@ -417,6 +419,8 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 
 	/* Clear data buffer */
 	memset(gGuiTxDataFrame.dataBuff, 0, sizeof(gGuiTxDataFrame.dataBuff));
+	/* Clear data length */
+	gGuiTxDataFrame.length = 0;
 
 	gGuiTxDataFrame.header = 0x0A;
 
@@ -441,6 +445,58 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		}
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length = sizeof(FloatByteArray);
+	}
+	else if(getLeftParameter == 1)
+	{
+		gGuiTxDataFrame.mode = GUI_RECEIVE_PARAMETER_LEFT;
+		/*!< Get set point */
+		mlsPeriphMotorLeftPIDGetSetPoint(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get Kp */
+		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get set point */
+		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get set point */
+		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+
+		/*!< Clear Rx buffer */
+		memset(&gGuiRxDataFrame, 0, sizeof(dataFrame_t));
+
+		//Turn off flag
+		getLeftParameter = 0;
+	}
+	else if(getRightParameter == 1)
+	{
+		gGuiTxDataFrame.mode = GUI_RECEIVE_PARAMETER_RIGHT;
+		/*!< Get set point */
+		mlsPeriphMotorRightPIDGetSetPoint(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get Kp */
+		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get set point */
+		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get set point */
+		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+
+		/*!< Clear Rx buffer */
+		memset(&gGuiRxDataFrame, 0, sizeof(dataFrame_t));
+
+		//Turn off flag
+		getRightParameter = 0;
 	}
 
 	gGuiTxDataFrame.footer = 0x06;
@@ -525,6 +581,14 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 		{
 			return errorCode;
 		}
+		break;
+	case GUI_GET_PARAMETER_LEFT:
+		//Turn on flag
+		getLeftParameter = 1;
+		break;
+	case GUI_GET_PARAMETER_RIGHT:
+		//Turn on flag
+		getRightParameter = 1;
 		break;
 	default:
 

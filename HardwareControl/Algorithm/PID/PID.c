@@ -131,4 +131,67 @@ mlsErrorCode_t mlsMotorPIDGetRealVaule(motorPIDHandle_t handle, float *realValue
 
 	return MLS_SUCCESS;
 }
+
+mlsErrorCode_t mlsMotorPIDGetKp(motorPIDHandle_t handle, float *Kp)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	*Kp = handle->Kp;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDGetKi(motorPIDHandle_t handle, float *Ki)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	*Ki = handle->Ki;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDGetKd(motorPIDHandle_t handle, float *Kd)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	*Kd = handle->Kd;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDGetSetPoint(motorPIDHandle_t handle, float *setPoint)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	*setPoint = handle->setPoint;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	return MLS_SUCCESS;
+}
 /**@}*/

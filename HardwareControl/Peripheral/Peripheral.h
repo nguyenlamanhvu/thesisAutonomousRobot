@@ -404,6 +404,94 @@ mlsErrorCode_t mlsPeriphMotorRightPIDSetSetPoint(float setPoint);
  */
 mlsErrorCode_t mlsPeriphMotorRightPIDGetRealValue(float *realValue);
 
+/*
+ * @brief   Get Kp of left motor.
+ *
+ * @param   *Kp: pointer of Kp.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetKp(float *Kp);
+
+/*
+ * @brief   Get Ki of left motor.
+ *
+ * @param   *Ki: pointer of Ki.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetKi(float *Ki);
+
+/*
+ * @brief   Get Kd of left motor.
+ *
+ * @param   *Kd: pointer of Kd.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetKd(float *Kd);
+
+/*
+ * @brief   Get set point of left motor.
+ *
+ * @param   *setPoint: pointer of set point.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetSetPoint(float *setPoint);
+
+/*
+ * @brief   Get Ki of right motor.
+ *
+ * @param   *Ki: pointer of Ki.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDGetKp(float *Kp);
+
+/*
+ * @brief   Get Ki of right motor.
+ *
+ * @param   *Ki: pointer of Ki.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDGetKi(float *Ki);
+
+/*
+ * @brief   Get Kd of right motor.
+ *
+ * @param   *Kd: pointer of Kd.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDGetKd(float *Kd);
+
+/*
+ * @brief   Get set point of right motor.
+ *
+ * @param   *setPoint: pointer of set point.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint);
+
 #ifdef __cplusplus
 }
 #endif
