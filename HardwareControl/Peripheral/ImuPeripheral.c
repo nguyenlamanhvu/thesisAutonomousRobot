@@ -50,8 +50,8 @@
 #endif
 
 #ifdef USE_MADGWICK_FILTER
-#define DEFAULT_MADGWICK_BETA  				0.1f
-#define DEFAULT_MADGWICK_SAMPLE_FREQ  		1000.0f
+#define DEFAULT_MADGWICK_BETA  				0.3f
+#define DEFAULT_MADGWICK_SAMPLE_FREQ  		200.0f
 #endif
 /********** Local (static) variable definition ********************************/
 #ifdef USE_ACC_GYRO_MPU9250
@@ -133,7 +133,7 @@ mlsErrorCode_t mlsPeriphImuInit(void)
 	}
 
 	ak8963Config_t ak8963Config = {
-		.oprerationMode = AK8963_MODE_CONT_MEASUREMENT_1,
+		.oprerationMode = AK8963_MODE_CONT_MEASUREMENT_2,
 		.mfsSel = AK8963_MFS_16BIT,
 		.magHardIronBiasX = DEFAULT_MAG_HARD_IRON_X,
 		.magHardIronBiasY = DEFAULT_MAG_HARD_IRON_Y,

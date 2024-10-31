@@ -20,6 +20,7 @@
 #include "stdlib.h"
 #include "stddef.h"
 #include "PID.h"
+#include "Peripheral.h"
 /********** Local Constant and compile switch definition section **************/
 
 /********** Local Type definition section *************************************/
@@ -29,6 +30,8 @@ typedef struct motorPID {
     float Kd;
     float setPoint;
     float realValue;
+    float controlValue;
+    uint16_t frequency;
 } motorPID_t;
 /********** Local Macro definition section ************************************/
 
@@ -63,6 +66,8 @@ mlsErrorCode_t mlsMotorPIDSetConfig(motorPIDHandle_t handle, motorPIDCfg_t confi
 	handle->Kd = config.Kd;
 	handle->setPoint = config.setPoint;
 	handle->realValue = 0;
+	handle->controlValue = config.controlValue;
+	handle->frequency = config.frequency;
 
 	return MLS_SUCCESS;
 }
@@ -191,6 +196,49 @@ mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle)
 	{
 		return MLS_ERROR_NULL_PTR;
 	}
+
+	static float Error = 0.0;
+	static float preError = 0.0;
+	static float pre2Error = 0.0;
+	static float preOut = 0.0;
+
+	float partP, partI, partD;
+
+	pre2Error = preError;
+	preError = Error;
+	Error = handle->setPoint - handle->realValue;
+	partP = handle->Kp * (Error - preError);
+	partI = 0.5 * handle->Ki / handle->frequency * (Error + preError);
+	partD = handle->Kd * handle->frequency * (Error - 2*preError + pre2Error);
+	handle->controlValue = preOut + partP + partI + partD;
+	handle->controlValue = mlsPeriphMotorConstrain(handle->controlValue, MIN_LINEAR_VELOCITY, MAX_LINEAR_VELOCITY);
+	preOut = handle->controlValue;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDUpdateRealValue(motorPIDHandle_t handle, float realValue)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	handle->realValue = realValue;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDGetControlValue(motorPIDHandle_t handle, float *controlValue)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	*controlValue = handle->controlValue;
 
 	return MLS_SUCCESS;
 }

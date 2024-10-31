@@ -38,13 +38,17 @@ extern "C"
 #define CONTROL_MOTOR_TIME_INDEX		2	/* Time index control motor DC*/
 #define VEL_PUBLISH_TIME_INDEX			3	/* Time index publish velocity*/
 #define DRIVE_INFORMATION_TIME_INDEX	4	/* Time index publish drive information*/
+#define COMPUTE_PID_CONTROLLER_INDEX	5	/* Time index compute PID controller*/
 
 /* Frequency of publish/subscribe */
-#define IMU_PUBLISH_FREQUENCY			15		/* Frequency in Hz to publish IMU information*/
-#define IMU_UPDATE_FREQUENCY			1000	/* Frequency in Hz to update IMU information*/
-#define CONTROL_MOTOR_FREQUENCY			60		/* Frequency in Hz to control DC motor*/
-#define VEL_PUBLISH_FREQUENCY			10		/* Frequency in Hz to publish velocity*/
-#define DRIVE_INFORMATION_FREQUENCY		10		/* Frequency in Hz to publish drive information*/
+#define IMU_PUBLISH_FREQUENCY				20		/* Frequency in Hz to publish IMU information*/
+#define IMU_UPDATE_FREQUENCY				200		/* Frequency in Hz to update IMU information*/
+#define CONTROL_MOTOR_FREQUENCY				60		/* Frequency in Hz to control DC motor*/
+#define VEL_PUBLISH_FREQUENCY				10		/* Frequency in Hz to publish velocity*/
+#define DRIVE_INFORMATION_FREQUENCY			10		/* Frequency in Hz to publish drive information*/
+#define COMPUTE_PID_CONTROLLER_FREQUENCY	100		/* Frequency in Hz to compute PID controller*/
+
+#define CONTROL_MOTOR_TIMEOUT               500     /*!< Period in ms to check control motor timeout */
 /********** Function declaration section **************************************/
 
 /*

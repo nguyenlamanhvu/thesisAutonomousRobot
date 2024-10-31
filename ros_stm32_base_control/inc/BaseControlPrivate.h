@@ -38,6 +38,9 @@ extern "C"
 /********** Macro definition section*******************************************/
 #define LINEAR	0
 #define ANGULAR	1
+
+#define LEFT	0
+#define RIGHT	1
 /********** Function declaration section **************************************/
 /*
  * @brief Base Control ROS Setup
@@ -141,6 +144,41 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void);
  * @return ErrorCode
  */
 mlsErrorCode_t mlsBaseControlUpdateImu(void);
+
+/*
+ * @brief Calculate PID.
+ * @param None
+ * @return ErrorCode
+ */
+void mlsBaseControlCalculatePID(void);
+
+/*
+ * @brief Get control velocity time.
+ * @param None
+ * @return Elapsed time
+ */
+uint32_t mlsBaseControlGetControlVelocityTime(void);
+
+/*
+ * @brief Set set point velocity to zero
+ * @param None
+ * @return None
+ */
+void mlsBaseControlSetVelocityZero(void);
+
+/*
+ * @brief Set set point velocity to goal
+ * @param None
+ * @return None
+ */
+void mlsBaseControlSetVelocityGoal(void);
+
+/*
+ * @brief Set control value to motor
+ * @param None
+ * @return None
+ */
+void mlsBaseControlSetControlValue(void);
 
 #ifdef __cplusplus
 }

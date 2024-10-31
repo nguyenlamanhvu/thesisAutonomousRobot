@@ -28,7 +28,30 @@ extern "C"
 #include "errorCode.h"
 #include "compilerSwitch.h"
 /********** Constant  and compile switch definition section *******************/
+/* Robot parameters */
+#define WHEEL_RADIUS                0.033                                   /*!< Wheel radius in meter */
+#define WHEEL_SEPARATION            0.165                                   /*!< Wheel separate distance in meter */
+#define TURNING_RADIUS              0.08                                    /*!< Turning radius in meter */
+#define MAX_LINEAR_VELOCITY         (WHEEL_RADIUS * 2 * PI * 60 / 60)       /*!< Max linear velocity */
+#define MAX_ANGULAR_VELOCITY        (MAX_LINEAR_VELOCITY / TURNING_RADIUS)  /*!< Max angular velocity */
+#define MIN_LINEAR_VELOCITY         -MAX_LINEAR_VELOCITY                    /*!< Min linear velocity */
+#define MIN_ANGULAR_VELOCITY        -MAX_ANGULAR_VELOCITY                   /*!< Min angular velocity */
 
+/* Step motor direction index */
+#define MOTORLEFT_DIR_FORWARD       0
+#define MOTORLEFT_DIR_BACKWARD      1
+#define MOTORRIGHT_DIR_FORWARD      1
+#define MOTORRIGHT_DIR_BACKWARD     0
+
+/* Encoder counter mode index */
+#define ENCODER_COUNTER_MODE_UP  		0
+#define ENCODER_COUNTER_MODE_DOWN  		1
+
+/* Step driver parameters */
+#define MICROSTEP_DIV               19.7        /*!< Step driver microstep divider */
+#define NUM_PULSE_PER_ROUND         500         /*!< The number of pulse per round of encoder */
+
+#define PI                  3.14159265359
 /********** Type definition section *******************************************/
 
 /********** Macro definition section*******************************************/
@@ -156,6 +179,17 @@ mlsErrorCode_t mlsPeriphImuUpdateQuat(void);
 mlsErrorCode_t mlsPeriphImuGetQuat(float *q0, float *q1, float *q2, float *q3);
 
 /*
+ * @brief   Get constrain value.
+ *
+ * @param   x: real value
+ * @param	lowVal: low threshold
+ * @param	highVal: high threshold
+ *
+ * @return	value after constrain
+ */
+float mlsPeriphMotorConstrain(float x, float lowVal, float highVal);
+
+/*
  * @brief   Initialize Motor with default parameters.
  * @note    This function must be called first.
  * @param   None.
@@ -272,7 +306,20 @@ mlsErrorCode_t mlsPeriphEncoderInit(void);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphEncoderLeftGetTick(uint32_t *tick);
+mlsErrorCode_t mlsPeriphEncoderLeftGetTick(int32_t *tick);
+
+/*
+ * @brief   Calculate left motor velocity.
+ *
+ * @param   tick: tick value of left encoder.
+ * @param	stepTime: step time.
+ * @param	*velocity: pointer of motor velocity
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity);
 
 /*
  * @brief   Get tick value from right encoder.
@@ -283,7 +330,21 @@ mlsErrorCode_t mlsPeriphEncoderLeftGetTick(uint32_t *tick);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphEncoderRightGetTick(uint32_t *tick);
+mlsErrorCode_t mlsPeriphEncoderRightGetTick(int32_t *tick);
+
+/*
+ * @brief   Calculate right motor velocity.
+ *
+ * @param   tick: tick value of right encoder.
+ * @param	stepTime: step time.
+ * @param	*velocity: pointer of motor velocity
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity);
+
 /*
  * @brief   Initialize Motor PID with default parameters.
  * @note    This function must be called first.
@@ -491,6 +552,72 @@ mlsErrorCode_t mlsPeriphMotorRightPIDGetKd(float *Kd);
  *      - Others:           Fail.
  */
 mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint);
+
+/*
+ * @brief   Calculate PID control value of left motor.
+ *
+ * @param   none.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void);
+
+/*
+ * @brief   Calculate PID control value of right motor.
+ *
+ * @param   none.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(void);
+
+/*
+ * @brief   Update real value of left motor.
+ *
+ * @param   realValue: real value.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDUpdateRealValue(float realValue);
+
+/*
+ * @brief   Update real value of right motor.
+ *
+ * @param   realValue: real value.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDUpdateRealValue(float realValue);
+
+/*
+ * @brief   Update control value to left motor.
+ *
+ * @param   none
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
+
+/*
+ * @brief   Update control value to right motor.
+ *
+ * @param   none
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void);
 
 #ifdef __cplusplus
 }

@@ -43,8 +43,8 @@ mlsErrorCode_t mlsBaseControlInit(void)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
 	/* Initialize peripherals */
-//	errorCode = mlsPeriphImuInit();
-//	errorCode = mlsPeriphImuFilterInit();
+	errorCode = mlsPeriphImuInit();
+	errorCode = mlsPeriphImuFilterInit();
 	errorCode = mlsPeriphMotorInit();
 	errorCode = mlsPeriphEncoderInit();
 	errorCode = mlsPeriphMotorPIDInit();
@@ -69,6 +69,16 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
 	{
 		mlsBaseControlUpdateGoalVel();
+		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
+		{
+			mlsBaseControlSetVelocityZero();
+		}
+		else
+		{
+			mlsBaseControlSetVelocityGoal();
+		}
+		mlsBaseControlCalculatePID();
+		mlsBaseControlSetControlValue();
 		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
 	}
 
@@ -80,10 +90,10 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	}
 
 	/* Update IMU */
-	if(gBaseControlTimeUpdateFlag[IMU_UPDATE_FREQUENCY] == 1)
+	if(gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] == 1)
 	{
 		mlsBaseControlUpdateImu();
-		gBaseControlTimeUpdateFlag[IMU_UPDATE_FREQUENCY] = 0;
+		gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] = 0;
 	}
 
 	/* Publish IMU data to topic "imu"*/
@@ -126,6 +136,23 @@ mlsErrorCode_t mlsBaseControlMain(void)
 		mlsBaseControlGuiReceiveData();
 		//Turn off flag
 		gGuiUpdateParameter = 0;
+	}
+
+	/* Control motor*/
+	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
+	{
+		mlsBaseControlUpdateGoalVel();
+		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
+		{
+			mlsBaseControlSetVelocityZero();
+		}
+		else
+		{
+			mlsBaseControlSetVelocityGoal();
+		}
+		mlsBaseControlCalculatePID();
+		mlsBaseControlSetControlValue();
+		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
 	}
 
 	/* Publish motor velocity data to gui */

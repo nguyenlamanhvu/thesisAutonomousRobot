@@ -105,11 +105,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		gBaseControlTimeUpdate[DRIVE_INFORMATION_TIME_INDEX] = 0;
 	}
 
+    if(gBaseControlTimeUpdate[COMPUTE_PID_CONTROLLER_INDEX] >= 1000/COMPUTE_PID_CONTROLLER_FREQUENCY)
+    {
+    	gBaseControlTimeUpdateFlag[COMPUTE_PID_CONTROLLER_INDEX] = 1;
+    	gBaseControlTimeUpdate[COMPUTE_PID_CONTROLLER_INDEX] = 0;
+    }
+
     gBaseControlTimeUpdate[IMU_PUBLISH_TIME_INDEX]++;
 	gBaseControlTimeUpdate[IMU_UPDATE_TIME_INDEX]++;
 	gBaseControlTimeUpdate[CONTROL_MOTOR_TIME_INDEX]++;
 	gBaseControlTimeUpdate[VEL_PUBLISH_TIME_INDEX]++;
 	gBaseControlTimeUpdate[DRIVE_INFORMATION_TIME_INDEX]++;
+	gBaseControlTimeUpdate[COMPUTE_PID_CONTROLLER_INDEX]++;
   }
 }
 
@@ -136,6 +143,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 void mlsHardwareInfoDelay(uint32_t timeMs)
 {
 	HAL_Delay(timeMs);
+}
+
+uint32_t mlsHardwareInfoGetTickMs(void)
+{
+	return HAL_GetTick();
 }
 
 mlsErrorCode_t mlsHardwareInfoStartTimerInterrupt(TIM_HandleTypeDef* timBaseHandle)

@@ -42,6 +42,8 @@ typedef struct {
     float Ki;
     float Kd;
     float setPoint;
+    float controlValue;
+    uint16_t frequency;
 } motorPIDCfg_t;
 /********** Macro definition section*******************************************/
 
@@ -173,6 +175,41 @@ mlsErrorCode_t mlsMotorPIDGetSetPoint(motorPIDHandle_t handle, float *setPoint);
  *      - Others:      Fail.
  */
 mlsErrorCode_t mlsMotorPIDGetRealVaule(motorPIDHandle_t handle, float *realValue);
+
+/*
+ * @brief   Calculate PID control value.
+ *
+ * @param   handle Handle structure.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle);
+
+/*
+ * @brief   Update real value.
+ *
+ * @param   handle Handle structure.
+ * @param   realValue real value.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDUpdateRealValue(motorPIDHandle_t handle, float realValue);
+
+/*
+ * @brief   Get control value.
+ *
+ * @param   handle Handle structure.
+ * @param   *controlValue Pointer of control value.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDGetControlValue(motorPIDHandle_t handle, float *controlValue);
 #ifdef __cplusplus
 }
 #endif

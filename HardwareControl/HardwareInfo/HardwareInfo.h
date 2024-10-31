@@ -35,6 +35,8 @@ extern "C"
 #define UART_MAX_LENGTH 	36
 #elif (USE_UART_GUI == 1)
 #define UART_MAX_LENGTH 	20
+#else
+#define UART_MAX_LENGTH		100
 #endif
 /********** Type definition section *******************************************/
 typedef enum {
@@ -66,6 +68,13 @@ typedef struct {
  * @return Error Code
  */
 void mlsHardwareInfoDelay(uint32_t timeMs);
+
+/*
+ * @brief Get tick millisecond
+ * @param none
+ * @return tickMs
+ */
+uint32_t mlsHardwareInfoGetTickMs(void);
 
 /*
  * @brief Start timer interrupt

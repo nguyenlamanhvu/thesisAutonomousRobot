@@ -45,6 +45,7 @@
 #define ROS_TOPIC_MAG						"mag"
 #define ROS_TOPIC_VEL						"robot_vel"
 #define ROS_TOPIC_CALLBACK_VEL				"callback_robot_vel"
+
 /********** Local Type definition section *************************************/
 #if (USE_UART_MATLAB == 1 || USE_UART_GUI == 1)
 typedef union {
@@ -52,6 +53,11 @@ typedef union {
     uint8_t byteArray[4];
 }FloatByteArray;
 #endif
+
+typedef enum {
+	UPDATE_TIME_PID = 0x00,
+	UPDATE_TIME_CONTROL_ROBOT =0x01,
+}updateTime_t;
 /********** Local Macro definition section ************************************/
 
 /********** Global variable definition section ********************************/
@@ -70,6 +76,7 @@ static void BaseControlCallbackCommandVelocity(const geometry_msgs::Twist &callb
 /********** Local (static) variable definition section ************************/
 ros::NodeHandle rosNodeHandle;    	/*!< ROS node handle */
 char rosLogBuffer[100];          	/*!< ROS log message buffer */
+unsigned long rosPrevUpdateTime[2];	/*!< ROS previous update time */
 
 char imuFrameId[20];
 
@@ -86,6 +93,7 @@ ros::Publisher velPub(ROS_TOPIC_VEL, &velocityMsg);
 
 float goalVelocity[2] = {0.0, 0.0};            	/*!< Velocity to control motor */
 float goalReceiveVelocity[2] = {0.0, 0.0};   	/*!< Velocity receive from "callback_robot_vel" topic */
+float goalMotorVelocity[2] = {0.0, 0.0};		/*!< Velocity of 2 motors */
 
 #if (USE_UART_MATLAB == 1)
 FloatByteArray uartData;
@@ -96,7 +104,23 @@ FloatByteArray uartData;
 static uint8_t getLeftParameter = 0;
 static uint8_t getRightParameter = 0;
 #endif
+
+uint32_t stepControlRobotTime = 0;
 /********** Local function definition section *********************************/
+static ros::Time BaseControlGetROSTime(void)
+{
+	return rosNodeHandle.now();
+}
+
+static uint32_t BaseControlGetElaspedTime(uint32_t *time)
+{
+	uint32_t timeNow = mlsHardwareInfoGetTickMs();
+	uint32_t elaspedTime = timeNow - *time;
+	*time = timeNow;
+
+	return elaspedTime;
+}
+
 static sensor_msgs::Imu BaseControlGetIMU(void)
 {
 	float accelX, accelY, accelZ;
@@ -188,13 +212,10 @@ static void BaseControlCallbackCommandVelocity(const geometry_msgs::Twist &callb
 
 	/* Constrain velocity */
 
-
+	/* Update control robot time */
+	stepControlRobotTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT]);
 }
 
-static ros::Time BaseControlGetROSTime(void)
-{
-	return rosNodeHandle.now();
-}
 /********** Global function definition section ********************************/
 void mlsBaseControlROSSetup(void)
 {
@@ -205,6 +226,9 @@ void mlsBaseControlROSSetup(void)
     rosNodeHandle.advertise(imuPub);	/*!< Register the publisher to "imu" topic */
     rosNodeHandle.advertise(magPub);	/*!< Register the publisher to "mag" topic */
     rosNodeHandle.advertise(velPub);	/*!< Register the publisher to "robot_vel" topic */
+
+    rosPrevUpdateTime[UPDATE_TIME_PID] = mlsHardwareInfoGetTickMs();
+    rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT] = mlsHardwareInfoGetTickMs();
 }
 
 void mlsBaseControlSpinOnce(void)
@@ -602,6 +626,50 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 mlsErrorCode_t mlsBaseControlUpdateImu(void)
 {
 	return mlsPeriphImuUpdateQuat();
+}
+
+void mlsBaseControlCalculatePID(void)
+{
+	int32_t leftTick, rightTick;
+	/* Update time */
+	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
+	/* Get tick from encoder */
+	mlsPeriphEncoderLeftGetTick(&leftTick);
+	mlsPeriphEncoderRightGetTick(&rightTick);
+	/* Calculate linear velocity of 2 motors*/
+	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &goalMotorVelocity[LEFT]);
+	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &goalMotorVelocity[RIGHT]);
+	/* Update real value to PID controller */
+	mlsPeriphMotorLeftPIDUpdateRealValue(goalMotorVelocity[LEFT]);
+	mlsPeriphMotorRightPIDUpdateRealValue(goalMotorVelocity[RIGHT]);
+	/* Calculate PID */
+	mlsPeriphMotorLeftPIDCalculate();
+	mlsPeriphMotorRightPIDCalculate();
+}
+
+uint32_t mlsBaseControlGetControlVelocityTime(void)
+{
+	return stepControlRobotTime;
+}
+
+void mlsBaseControlSetVelocityZero(void)
+{
+	mlsPeriphMotorLeftPIDSetSetPoint(0);
+	mlsPeriphMotorRightPIDSetSetPoint(0);
+}
+
+void mlsBaseControlSetVelocityGoal(void)
+{
+	float rightWheelVelocity = 0.0, leftWheelVelocity = 0.0;
+
+	mlsPeriphMotorLeftPIDSetSetPoint(leftWheelVelocity);
+	mlsPeriphMotorRightPIDSetSetPoint(rightWheelVelocity);
+}
+
+void mlsBaseControlSetControlValue(void)
+{
+	mlsPeriphMotorLeftPIDSetControl();
+	mlsPeriphMotorRightPIDSetControl();
 }
 /********** Class function implementation section *****************************/
 
