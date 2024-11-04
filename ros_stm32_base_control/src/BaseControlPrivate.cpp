@@ -628,6 +628,11 @@ mlsErrorCode_t mlsBaseControlUpdateImu(void)
 	return mlsPeriphImuUpdateQuat();
 }
 
+mlsErrorCode_t mlsBaseControlGet9Axis(void)
+{
+	return mlsPeriphImuGet9Axis();
+}
+
 void mlsBaseControlCalculatePID(void)
 {
 	int32_t leftTick, rightTick;

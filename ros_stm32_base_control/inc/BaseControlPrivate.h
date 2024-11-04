@@ -146,6 +146,13 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void);
 mlsErrorCode_t mlsBaseControlUpdateImu(void);
 
 /*
+ * @brief Get data 9 Axis from IMU.
+ * @param None
+ * @return ErrorCode
+ */
+mlsErrorCode_t mlsBaseControlGet9Axis(void);
+
+/*
  * @brief Calculate PID.
  * @param None
  * @return ErrorCode

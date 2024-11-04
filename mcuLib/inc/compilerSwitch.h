@@ -32,8 +32,8 @@ extern "C" {
 #define USE_MAGNETOMETER_MPU9250
 #define USE_ACC_GYRO_MPU9250
 //#define USE_IMU_ADIS16488
-#define USE_MADGWICK_FILTER
-//#define USE_ROS_LOG_DEBUG
+#define USE_MADGWICK_FILTER	1
+#define USE_ROS_LOG_DEBUG
 //#define USE_ROS_LOG_REPEAT_CONNECTED_DEBUG
 #define PUBLISH_MAG_DEBUG
 /********** Type definition section *******************************************/
