@@ -364,7 +364,7 @@ mlsErrorCode_t mlsPeriphEncoderInit(void)
 
 mlsErrorCode_t mlsPeriphEncoderLeftGetTick(int32_t *tick)
 {
-	if(encoderLeftHandle == NULL || motorLeftPIDHandle == NULL)
+	if(encoderLeftHandle == NULL)
 	{
 		return MLS_ERROR_NULL_PTR;
 	}
@@ -374,7 +374,8 @@ mlsErrorCode_t mlsPeriphEncoderLeftGetTick(int32_t *tick)
 	mlsEncoderGetCounter(encoderLeftHandle, &temp);
 	mlsEncoderSetCounter(encoderLeftHandle, MICROSTEP_DIV * NUM_PULSE_PER_ROUND / 2);
 
-	*tick = temp - (MICROSTEP_DIV * NUM_PULSE_PER_ROUND / 2);
+	//Divide because encoder is used in x4 mode
+	*tick = (temp  - (MICROSTEP_DIV * NUM_PULSE_PER_ROUND / 2)) / 4;
 
 	return MLS_SUCCESS;
 }
@@ -411,7 +412,8 @@ mlsErrorCode_t mlsPeriphEncoderRightGetTick(int32_t *tick)
 	mlsEncoderGetCounter(encoderRightHandle, &temp);
 	mlsEncoderSetCounter(encoderRightHandle, MICROSTEP_DIV * NUM_PULSE_PER_ROUND / 2);
 
-	*tick = temp - (MICROSTEP_DIV * NUM_PULSE_PER_ROUND / 2);
+	//Divide temp because encoder is used in x4 mode
+	*tick = (temp  - (MICROSTEP_DIV * NUM_PULSE_PER_ROUND / 2)) / 4;
 
 	return MLS_SUCCESS;
 }

@@ -26,7 +26,7 @@
 /********** Local Constant and compile switch definition section **************/
 
 /********** Local Type definition section *************************************/
-#define TIMER_MAX_RELOAD 				0xFFFF
+#define TIMER_LEFT_MAX_RELOAD 			0xFFFFFFFF
 #define HW_LEFTMOTOR_TIM_HANDLE 		htim1
 #define HW_LEFTMOTOR_TIM 				TIM1
 #define HW_LEFTMOTOR_TIM_CCR 			CCR1
@@ -35,13 +35,14 @@
 #define HW_LEFTMOTOR_GPIO 				GPIOE
 #define HW_LEFTMOTOR_GPIO_PIN 			GPIO_PIN_10
 
-#define HW_RIGHTMOTOR_TIM_HANDLE 		htim1
+#define TIMER_RIGHT_MAX_RELOAD 			0xFFFF
+#define HW_RIGHTMOTOR_TIM_HANDLE 		htim4
 #define HW_RIGHTMOTOR_TIM 				TIM1
 #define HW_RIGHTMOTOR_TIM_CCR 			CCR1
-#define HW_RIGHTMOTOR_TIM_CHANNEL 		TIM_CHANNEL_2
-#define HW_RIGHTMOTOR_TIM_CLK_FREQ 		168000000
-#define HW_RIGHTMOTOR_GPIO 				GPIOE
-#define HW_RIGHTMOTOR_GPIO_PIN 			GPIO_PIN_12
+#define HW_RIGHTMOTOR_TIM_CHANNEL 		TIM_CHANNEL_1
+#define HW_RIGHTMOTOR_TIM_CLK_FREQ 		84000000
+#define HW_RIGHTMOTOR_GPIO 				GPIOD
+#define HW_RIGHTMOTOR_GPIO_PIN 			GPIO_PIN_11
 
 #define HW_LEFT_ENCODER_TIM_HANDLE 		htim2
 #define HW_LEFT_ENCODER_TIM 			TIM2
@@ -256,7 +257,7 @@ mlsErrorCode_t mlsHardwareInfoLeftMotorSetFrequency(uint32_t freq)
 	 * need to update timer compare value to keep duty cycle stable */
 	uint32_t apbFreq = HW_LEFTMOTOR_TIM_CLK_FREQ;
 	uint32_t conduct = (uint32_t)(apbFreq / freq);
-	uint16_t timerPrescaler = conduct / TIMER_MAX_RELOAD + 1;
+	uint16_t timerPrescaler = conduct / TIMER_LEFT_MAX_RELOAD + 1;
 	uint16_t timerPeriod = (uint16_t)(conduct / (timerPrescaler + 1)) - 1;
 
 	__HAL_TIM_SET_AUTORELOAD(&HW_LEFTMOTOR_TIM_HANDLE, timerPeriod);
@@ -313,7 +314,7 @@ mlsErrorCode_t mlsHardwareInfoRightMotorSetFrequency(uint32_t freq)
 	 * need to update timer compare value to keep duty cycle stable */
 	uint32_t apbFreq = HW_RIGHTMOTOR_TIM_CLK_FREQ;
 	uint32_t conduct = (uint32_t)(apbFreq / freq);
-	uint16_t timerPrescaler = conduct / TIMER_MAX_RELOAD + 1;
+	uint16_t timerPrescaler = conduct / TIMER_RIGHT_MAX_RELOAD + 1;
 	uint16_t timerPeriod = (uint16_t)(conduct / (timerPrescaler + 1)) - 1;
 
 	__HAL_TIM_SET_AUTORELOAD(&HW_RIGHTMOTOR_TIM_HANDLE, timerPeriod);
@@ -345,14 +346,16 @@ mlsErrorCode_t mlsHardwareInfoRightMotorSetDir(uint8_t dir)
 
 mlsErrorCode_t mlsHardwareInfoLeftEncoderStart(void)
 {
-	HAL_TIM_Base_Start(&HW_LEFT_ENCODER_TIM_HANDLE);
+//	HAL_TIM_Base_Start(&HW_LEFT_ENCODER_TIM_HANDLE);
+	HAL_TIM_Encoder_Start(&HW_LEFT_ENCODER_TIM_HANDLE, TIM_CHANNEL_ALL);
 
 	return MLS_SUCCESS;
 }
 
 mlsErrorCode_t mlsHardwareInfoLeftEncoderStop(void)
 {
-	HAL_TIM_Base_Stop(&HW_LEFT_ENCODER_TIM_HANDLE);
+//	HAL_TIM_Base_Stop(&HW_LEFT_ENCODER_TIM_HANDLE);
+	HAL_TIM_Encoder_Stop(&HW_LEFT_ENCODER_TIM_HANDLE, TIM_CHANNEL_ALL);
 
 	return MLS_SUCCESS;
 }
@@ -399,14 +402,16 @@ mlsErrorCode_t mlsHardwareInfoLeftEncoderSetMode(uint8_t mode)
 
 mlsErrorCode_t mlsHardwareInfoRightEncoderStart(void)
 {
-	HAL_TIM_Base_Start(&HW_RIGHT_ENCODER_TIM_HANDLE);
+//	HAL_TIM_Base_Start(&HW_RIGHT_ENCODER_TIM_HANDLE);
+	HAL_TIM_Encoder_Start(&HW_RIGHT_ENCODER_TIM_HANDLE, TIM_CHANNEL_ALL);
 
 	return MLS_SUCCESS;
 }
 
 mlsErrorCode_t mlsHardwareInfoRightEncoderStop(void)
 {
-	HAL_TIM_Base_Stop(&HW_RIGHT_ENCODER_TIM_HANDLE);
+//	HAL_TIM_Base_Stop(&HW_RIGHT_ENCODER_TIM_HANDLE);
+	HAL_TIM_Encoder_Stop(&HW_LEFT_ENCODER_TIM_HANDLE, TIM_CHANNEL_ALL);
 
 	return MLS_SUCCESS;
 }
