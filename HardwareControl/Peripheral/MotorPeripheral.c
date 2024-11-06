@@ -41,6 +41,9 @@
 /* Convert motor tick to angular in radian */
 #define TICK2RAD        360.0f/(NUM_PULSE_PER_ROUND*MICROSTEP_DIV)*PI/180.0f
 
+/* Convert motor tick to the percentage of wheel */
+#define TICK2WHEEL		1.0f/(NUM_PULSE_PER_ROUND * MICROSTEP_DIV)
+
 #define DEFAULT_MOTOR_DUTY	50
 
 /* PID default value */
@@ -389,8 +392,9 @@ mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(uint32_t tick, uint32_t stepT
 
 	mlsErrorCode_t errorCode = MLS_ERROR;
 
-	// Convert tick/s -> rad/s -> m/s
-	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
+	// Convert tick/s -> RPM
+//	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
+	*velocity = (tick * 1000.0 * TICK2WHEEL *60) / stepTime;
 	errorCode = mlsPeriphMotorLeftPIDUpdateRealValue(*velocity);
 	if(errorCode != MLS_SUCCESS)
 	{
@@ -427,8 +431,9 @@ mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(uint32_t tick, uint32_t step
 
 	mlsErrorCode_t errorCode = MLS_ERROR;
 
-	// Convert tick/s -> rad/s -> m/s
-	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
+	// Convert tick/s -> RPM
+//	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
+	*velocity = (tick * 1000.0 * TICK2WHEEL *60) / stepTime;
 	errorCode = mlsPeriphMotorRightPIDUpdateRealValue(*velocity);
 	if(errorCode != MLS_SUCCESS)
 	{
