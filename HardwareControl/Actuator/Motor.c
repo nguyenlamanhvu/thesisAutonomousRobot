@@ -115,7 +115,7 @@ mlsErrorCode_t mlsMotorSetPwmDuty(motorHandle_t handle, float duty)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsMotorSetPwmFreq(motorHandle_t handle, uint8_t freqHz)
+mlsErrorCode_t mlsMotorSetPwmFreq(motorHandle_t handle, uint32_t freqHz)
 {
 	/* Check if handle structure is NULL */
 	if (handle == NULL)

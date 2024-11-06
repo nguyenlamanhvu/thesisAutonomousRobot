@@ -44,7 +44,8 @@
 /* Convert motor tick to the percentage of wheel */
 #define TICK2WHEEL		1.0f/(NUM_PULSE_PER_ROUND * MICROSTEP_DIV)
 
-#define DEFAULT_MOTOR_DUTY	50
+#define DEFAULT_MOTOR_DUTY			50
+#define DEFAULT_MOTOR_FREQUENCY		12500
 
 /* PID default value */
 #define MOTOR_LEFT_KP		0
@@ -136,12 +137,12 @@ mlsErrorCode_t mlsPeriphMotorInit(void)
 		return errorCode;
 	}
 
-	mlsMotorSetPwmFreq(motorLeftHandle, 0);
+	mlsMotorSetPwmFreq(motorLeftHandle, DEFAULT_MOTOR_FREQUENCY);
 	mlsMotorSetPwmDuty(motorLeftHandle, DEFAULT_MOTOR_DUTY);
 	mlsMotorSetDir(motorLeftHandle, MOTORLEFT_DIR_FORWARD);
 	mlsMotorStart(motorLeftHandle);
 
-	mlsMotorSetPwmFreq(motorRightHandle, 0);
+	mlsMotorSetPwmFreq(motorRightHandle, DEFAULT_MOTOR_FREQUENCY);
 	mlsMotorSetPwmDuty(motorRightHandle, DEFAULT_MOTOR_DUTY);
 	mlsMotorSetDir(motorRightHandle, MOTORRIGHT_DIR_FORWARD);
 	mlsMotorStart(motorRightHandle);

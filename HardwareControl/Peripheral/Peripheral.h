@@ -40,8 +40,8 @@ extern "C"
 /* Step motor direction index */
 #define MOTORLEFT_DIR_FORWARD       0
 #define MOTORLEFT_DIR_BACKWARD      1
-#define MOTORRIGHT_DIR_FORWARD      1
-#define MOTORRIGHT_DIR_BACKWARD     0
+#define MOTORRIGHT_DIR_FORWARD      0
+#define MOTORRIGHT_DIR_BACKWARD     1
 
 /* Encoder counter mode index */
 #define ENCODER_COUNTER_MODE_UP  		0

@@ -126,7 +126,7 @@ mlsErrorCode_t mlsMotorSetPwmDuty(motorHandle_t handle, float duty);
  *      - ERR_CODE_SUCCESS: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsMotorSetPwmFreq(motorHandle_t handle, uint8_t freqHz);
+mlsErrorCode_t mlsMotorSetPwmFreq(motorHandle_t handle, uint32_t freqHz);
 
 /*
  * @brief   Set motor direction.
