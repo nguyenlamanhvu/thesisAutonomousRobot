@@ -44,7 +44,7 @@
 /* Convert motor tick to the percentage of wheel */
 #define TICK2WHEEL		1.0f/(NUM_PULSE_PER_ROUND * MICROSTEP_DIV)
 
-#define DEFAULT_MOTOR_DUTY			50
+#define DEFAULT_MOTOR_DUTY			127					//Use max duty 255 (0xFF)
 #define DEFAULT_MOTOR_FREQUENCY		12500
 
 /* PID default value */
@@ -196,16 +196,16 @@ mlsErrorCode_t mlsPeriphMotorLeftSetSpeed(float speed)
 	if (speed < 0)
 	{
 		mlsMotorSetDir(motorLeftHandle, MOTORLEFT_DIR_BACKWARD);
-		mlsEncoderSetMode(encoderLeftHandle, ENCODER_COUNTER_MODE_DOWN);
-		mlsMotorSetPwmFreq(motorLeftHandle, (uint32_t)(-speed*VEL2FREQ));
-		mlsMotorSetPwmDuty(motorLeftHandle, DEFAULT_MOTOR_DUTY);
+//		mlsEncoderSetMode(encoderLeftHandle, ENCODER_COUNTER_MODE_DOWN);
+//		mlsMotorSetPwmFreq(motorLeftHandle, (uint32_t)(-speed*VEL2FREQ));
+		mlsMotorSetPwmDuty(motorLeftHandle, -speed);
 	}
 	else
 	{
 		mlsMotorSetDir(motorLeftHandle, MOTORLEFT_DIR_FORWARD);
-		mlsEncoderSetMode(encoderLeftHandle, ENCODER_COUNTER_MODE_UP);
-		mlsMotorSetPwmFreq(motorLeftHandle, (uint32_t)(-speed*VEL2FREQ));
-		mlsMotorSetPwmDuty(motorLeftHandle, DEFAULT_MOTOR_DUTY);
+//		mlsEncoderSetMode(encoderLeftHandle, ENCODER_COUNTER_MODE_UP);
+//		mlsMotorSetPwmFreq(motorLeftHandle, (uint32_t)(-speed*VEL2FREQ));
+		mlsMotorSetPwmDuty(motorLeftHandle, speed);
 	}
 
 	return MLS_SUCCESS;
@@ -276,16 +276,16 @@ mlsErrorCode_t mlsPeriphMotorRightSetSpeed(float speed)
 	if (speed < 0)
 	{
 		mlsMotorSetDir(motorRightHandle, MOTORRIGHT_DIR_BACKWARD);
-		mlsEncoderSetMode(encoderRightHandle, ENCODER_COUNTER_MODE_DOWN);
-		mlsMotorSetPwmFreq(motorRightHandle, (uint32_t)(-speed*VEL2FREQ));
-		mlsMotorSetPwmDuty(motorRightHandle, DEFAULT_MOTOR_DUTY);
+//		mlsEncoderSetMode(encoderRightHandle, ENCODER_COUNTER_MODE_DOWN);
+//		mlsMotorSetPwmFreq(motorRightHandle, (uint32_t)(-speed*VEL2FREQ));
+		mlsMotorSetPwmDuty(motorRightHandle, -speed);
 	}
 	else
 	{
 		mlsMotorSetDir(motorRightHandle, MOTORRIGHT_DIR_FORWARD);
-		mlsEncoderSetMode(encoderRightHandle, ENCODER_COUNTER_MODE_UP);
-		mlsMotorSetPwmFreq(motorRightHandle, (uint32_t)(-speed*VEL2FREQ));
-		mlsMotorSetPwmDuty(motorRightHandle, DEFAULT_MOTOR_DUTY);
+//		mlsEncoderSetMode(encoderRightHandle, ENCODER_COUNTER_MODE_UP);
+//		mlsMotorSetPwmFreq(motorRightHandle, (uint32_t)(-speed*VEL2FREQ));
+		mlsMotorSetPwmDuty(motorRightHandle, speed);
 	}
 
 	return MLS_SUCCESS;
