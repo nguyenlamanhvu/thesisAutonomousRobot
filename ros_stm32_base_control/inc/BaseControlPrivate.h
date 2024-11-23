@@ -179,7 +179,7 @@ void mlsBaseControlSetVelocityGoal(void);
  * @return None
  */
 void mlsBaseControlSetControlValue(void);
-
+void mlsBaseControlPublishTest(int32_t tick);
 #ifdef __cplusplus
 }
 #endif

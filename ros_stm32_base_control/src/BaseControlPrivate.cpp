@@ -671,6 +671,13 @@ void mlsBaseControlSetControlValue(void)
 	mlsPeriphMotorLeftPIDSetControl();
 	mlsPeriphMotorRightPIDSetControl();
 }
+
+void mlsBaseControlPublishTest(int32_t tick)
+{
+	sprintf(rosLogBuffer, "Right tick: %ld", tick);
+	rosNodeHandle.loginfo(rosLogBuffer);
+}
+
 /********** Class function implementation section *****************************/
 
 /**@}*/
