@@ -6,6 +6,16 @@
 #define PL_weight 1
 #define PVL_weight 1
 
+#define NL_error	1
+#define NS_error	1
+#define PS_error	1
+#define PL_error	1
+
+#define NL_cerror	1
+#define NS_cerror	1
+#define PS_cerror	1
+#define PL_cerror	1
+
 typedef struct {
     float PVS;
     float PMS;
@@ -21,6 +31,70 @@ const char *rule_base_Kd[5][5] = {
     {"PML", "PVL", "PVL", "PVL", "PVL"},
     {"PVL", "PVL", "PVL", "PVL", "PVL"}
 };
+
+fuzzy_input_variable_t Kd_calculate_e(float error)
+{
+	fuzzy_input_variable_t KdError;
+
+	if(error <= NL_error)
+	{
+		KdError.NL = 1;
+		KdError.NS = 0;
+		KdError.ZE = 0;
+		KdError.PS = 0;
+		KdError.PL = 0;
+	}
+	else if(error > NL_error || error <= PL_error)
+	{
+		KdError.NL = fuzzy_calculate_tamgiac(error, NL_error - 100, NS_error, NL_error);
+		KdError.NS = fuzzy_calculate_tamgiac(error, NL_error, 0, NS_error);
+		KdError.ZE = fuzzy_calculate_tamgiac(error, NS_error, PS_error, 0);
+		KdError.PS = fuzzy_calculate_tamgiac(error, 0, PL_error, PS_error);
+		KdError.PL = fuzzy_calculate_tamgiac(error, PS_error, PL_error + 100, PL_error);
+	}
+	else
+	{
+		KdError.NL = 0;
+		KdError.NS = 0;
+		KdError.ZE = 0;
+		KdError.PS = 0;
+		KdError.PL = 1;
+	}
+
+	return KdError;
+}
+
+fuzzy_input_variable_t Kd_calculate_ce(float cerror)
+{
+	fuzzy_input_variable_t KdCError;
+
+	if(cerror <= NL_cerror)
+	{
+		KdCError.NL = 1;
+		KdCError.NS = 0;
+		KdCError.ZE = 0;
+		KdCError.PS = 0;
+		KdCError.PL = 0;
+	}
+	else if(cerror > NL_cerror || cerror <= PL_cerror)
+	{
+		KdCError.NL = fuzzy_calculate_tamgiac(cerror, NL_cerror - 100, NS_cerror, NL_cerror);
+		KdCError.NS = fuzzy_calculate_tamgiac(cerror, NL_cerror, 0, NS_cerror);
+		KdCError.ZE = fuzzy_calculate_tamgiac(cerror, NS_cerror, PS_cerror, 0);
+		KdCError.PS = fuzzy_calculate_tamgiac(cerror, 0, PL_cerror, PS_cerror);
+		KdCError.PL = fuzzy_calculate_tamgiac(cerror, PS_cerror, PL_cerror + 100, PL_cerror);
+	}
+	else
+	{
+		KdCError.NL = 0;
+		KdCError.NS = 0;
+		KdCError.ZE = 0;
+		KdCError.PS = 0;
+		KdCError.PL = 1;
+	}
+
+	return KdCError;
+}
 
 float Kd_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce) {
     fuzzy_output_variable_t out_variable = {0};

@@ -111,6 +111,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     	gBaseControlTimeUpdateFlag[COMPUTE_PID_CONTROLLER_INDEX] = 1;
     	gBaseControlTimeUpdate[COMPUTE_PID_CONTROLLER_INDEX] = 0;
     }
+    if(gBaseControlTimeUpdate[COMPUTE_FUZZY_CONTROLLER_INDEX] >= 1000/COMPUTE_FUZZY_CONTROLLER_FREQUENCY)
+    {
+    	gBaseControlTimeUpdateFlag[COMPUTE_FUZZY_CONTROLLER_INDEX] = 1;
+    	gBaseControlTimeUpdate[COMPUTE_FUZZY_CONTROLLER_INDEX] = 0;
+    }
 
     gBaseControlTimeUpdate[IMU_PUBLISH_TIME_INDEX]++;
 	gBaseControlTimeUpdate[IMU_UPDATE_TIME_INDEX]++;
@@ -118,6 +123,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	gBaseControlTimeUpdate[VEL_PUBLISH_TIME_INDEX]++;
 	gBaseControlTimeUpdate[DRIVE_INFORMATION_TIME_INDEX]++;
 	gBaseControlTimeUpdate[COMPUTE_PID_CONTROLLER_INDEX]++;
+	gBaseControlTimeUpdate[COMPUTE_FUZZY_CONTROLLER_INDEX]++;
   }
 }
 
@@ -234,7 +240,7 @@ mlsErrorCode_t mlsHardwareInfoLeftMotorSetDuty(float duty)
 {
 	/* Calculate PWM compare value */
 	uint32_t computeValue;
-	computeValue = duty * (HW_LEFTMOTOR_TIM_HANDLE.Instance->ARR) / 255;
+	computeValue = duty * (HW_LEFTMOTOR_TIM_HANDLE.Instance->ARR) / 100;
 
 	/* Configure PWM compare value */
 	__HAL_TIM_SET_COMPARE(&HW_LEFTMOTOR_TIM_HANDLE, HW_LEFTMOTOR_TIM_CHANNEL, computeValue);
@@ -291,7 +297,7 @@ mlsErrorCode_t mlsHardwareInfoRightMotorSetDuty(float duty)
 {
 	/* Calculate PWM compare value */
 	uint32_t computeValue;
-	computeValue = duty * (HW_RIGHTMOTOR_TIM_HANDLE.Instance->ARR) / 255;
+	computeValue = duty * (HW_RIGHTMOTOR_TIM_HANDLE.Instance->ARR) / 100;
 
 	/* Configure PWM compare value */
 	__HAL_TIM_SET_COMPARE(&HW_RIGHTMOTOR_TIM_HANDLE, HW_RIGHTMOTOR_TIM_CHANNEL, computeValue);

@@ -46,4 +46,12 @@ fuzzy_input_variable_t get_fuzzy_label(float x) {
     return x_value;
 }
 
+float fuzzy_calculate_tamgiac(float x, float left, float right, float c)
+{
+	if(x < left)		return 0;
+	else if(x < c)		return ((x - left) / (c - left));
+	else if(x < right)	return ((right - x) / (right - c));
+	else				return 0;
+}
+
 

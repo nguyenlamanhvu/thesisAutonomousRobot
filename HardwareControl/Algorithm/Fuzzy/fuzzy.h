@@ -28,5 +28,15 @@ float membership_ZE(float x);
 float membership_PS(float x);
 float membership_PL(float x);
 fuzzy_input_variable_t get_fuzzy_label(float x) ;
+float fuzzy_calculate_tamgiac(float x, float left, float right, float c);
+fuzzy_input_variable_t Kp_calculate_e(float error);
+fuzzy_input_variable_t Kp_calculate_ce(float cerror);
+fuzzy_input_variable_t Ki_calculate_e(float error);
+fuzzy_input_variable_t Ki_calculate_ce(float cerror);
+fuzzy_input_variable_t Kd_calculate_e(float error);
+fuzzy_input_variable_t Kd_calculate_ce(float cerror);
+float Kp_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce);
+float Ki_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce);
+float Kd_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce);
 
 #endif /* ALGORITHM_FUZZY_FUZZY_H_ */

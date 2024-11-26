@@ -36,6 +36,8 @@ extern "C"
 #define MAX_ANGULAR_VELOCITY        (MAX_LINEAR_VELOCITY / TURNING_RADIUS)  /*!< Max angular velocity */
 #define MIN_LINEAR_VELOCITY         -MAX_LINEAR_VELOCITY                    /*!< Min linear velocity */
 #define MIN_ANGULAR_VELOCITY        -MAX_ANGULAR_VELOCITY                   /*!< Min angular velocity */
+#define MAX_MOTOR_VELOCITY			99
+#define MIN_MOTOR_VELOCITY			-MAX_MOTOR_VELOCITY
 
 /* Step motor direction index */
 #define MOTORLEFT_DIR_FORWARD       0
@@ -319,7 +321,7 @@ mlsErrorCode_t mlsPeriphEncoderLeftGetTick(int32_t *tick);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity);
+mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(int32_t tick, uint32_t stepTime, float *velocity);
 
 /*
  * @brief   Get tick value from right encoder.
@@ -343,7 +345,7 @@ mlsErrorCode_t mlsPeriphEncoderRightGetTick(int32_t *tick);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity);
+mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(int32_t tick, uint32_t stepTime, float *velocity);
 
 /*
  * @brief   Initialize Motor PID with default parameters.
@@ -573,7 +575,7 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(void);
+mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(uint32_t stepTime);
 
 /*
  * @brief   Update real value of left motor.
@@ -618,6 +620,8 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
  *      - Others:           Fail.
  */
 mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void);
+
+mlsErrorCode_t mlsPeriphMotorRightFuzzyCalculate(float stepTime);
 
 #ifdef __cplusplus
 }

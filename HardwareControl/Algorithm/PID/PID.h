@@ -33,6 +33,18 @@ extern "C"
 /********** Constant  and compile switch definition section *******************/
 
 /********** Type definition section *******************************************/
+typedef struct motorPID {
+    float Kp;
+    float Ki;
+    float Kd;
+    float setPoint;
+    float realValue;
+    float controlValue;
+    float stepTime;
+    float error;
+    float preError;
+} motorPID_t;
+
 typedef struct motorPID *motorPIDHandle_t;
 /**
  * @brief   Configuration structure.
@@ -43,7 +55,7 @@ typedef struct {
     float Kd;
     float setPoint;
     float controlValue;
-    uint16_t frequency;
+    float stepTime;
 } motorPIDCfg_t;
 /********** Macro definition section*******************************************/
 
@@ -185,7 +197,7 @@ mlsErrorCode_t mlsMotorPIDGetRealVaule(motorPIDHandle_t handle, float *realValue
  *      - MLS_SUCCESS: Success.
  *      - Others:      Fail.
  */
-mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle);
+mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle, float stepTime);
 
 /*
  * @brief   Update real value.
@@ -210,6 +222,7 @@ mlsErrorCode_t mlsMotorPIDUpdateRealValue(motorPIDHandle_t handle, float realVal
  *      - Others:      Fail.
  */
 mlsErrorCode_t mlsMotorPIDGetControlValue(motorPIDHandle_t handle, float *controlValue);
+
 #ifdef __cplusplus
 }
 #endif
