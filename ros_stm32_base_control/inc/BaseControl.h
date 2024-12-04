@@ -44,11 +44,11 @@ extern "C"
 /* Frequency of publish/subscribe */
 #define IMU_PUBLISH_FREQUENCY				20		/* Frequency in Hz to publish IMU information*/
 #define IMU_UPDATE_FREQUENCY				200		/* Frequency in Hz to update IMU information*/
-#define CONTROL_MOTOR_FREQUENCY				80		/* Frequency in Hz to control DC motor*/
+#define CONTROL_MOTOR_FREQUENCY				60		/* Frequency in Hz to control DC motor*/
 #define VEL_PUBLISH_FREQUENCY				10		/* Frequency in Hz to publish velocity*/
 #define DRIVE_INFORMATION_FREQUENCY			10		/* Frequency in Hz to publish drive information*/
 #define COMPUTE_PID_CONTROLLER_FREQUENCY	CONTROL_MOTOR_FREQUENCY		/* Frequency in Hz to compute PID controller*/
-#define COMPUTE_FUZZY_CONTROLLER_FREQUENCY	40		/* Frequency in Hz to compute Fuzzy controller*/
+#define COMPUTE_FUZZY_CONTROLLER_FREQUENCY	10		/* Frequency in Hz to compute Fuzzy controller*/
 
 #define CONTROL_MOTOR_TIMEOUT               500     /*!< Period in ms to check control motor timeout */
 /********** Function declaration section **************************************/

@@ -49,9 +49,9 @@
 #define DEFAULT_MOTOR_FREQUENCY		12500
 
 /* PID default value */
-#define MOTOR_LEFT_KP		0
-#define MOTOR_LEFT_KI		0
-#define MOTOR_LEFT_KD		0
+#define MOTOR_LEFT_KP		1.23
+#define MOTOR_LEFT_KI		2.181
+#define MOTOR_LEFT_KD		0.00175
 
 #define MOTOR_RIGHT_KP		0
 #define MOTOR_RIGHT_KI		0
@@ -63,6 +63,9 @@ encoderHandle_t encoderLeftHandle = NULL;
 encoderHandle_t encoderRightHandle = NULL;
 motorPIDHandle_t motorLeftPIDHandle = NULL;
 motorPIDHandle_t motorRightPIDHandle = NULL;
+
+float cerrorMax = -1000;
+float cerrorMin = 1000;
 /********** Local (static) function declaration section ***********************/
 
 /********** Local function definition section *********************************/
@@ -358,6 +361,9 @@ mlsErrorCode_t mlsPeriphEncoderInit(void)
 		return errorCode;
 	}
 
+	mlsEncoderSetCounter(encoderLeftHandle, NUM_PULSE_PER_ROUND * MICROSTEP_DIV / 2);
+	mlsEncoderSetCounter(encoderRightHandle, NUM_PULSE_PER_ROUND * MICROSTEP_DIV / 2);
+
 	mlsEncoderSetMode(encoderLeftHandle, ENCODER_COUNTER_MODE_UP);
 	mlsEncoderSetMode(encoderRightHandle, ENCODER_COUNTER_MODE_UP);
 
@@ -397,7 +403,7 @@ mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(int32_t tick, uint32_t stepTi
 	// Convert tick/s -> RPM
 //	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
 	*velocity = (tick * 1000.0 * TICK2WHEEL *60) / stepTime;
-	errorCode = mlsPeriphMotorLeftPIDUpdateRealValue(*velocity);
+
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
@@ -436,7 +442,7 @@ mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(int32_t tick, uint32_t stepT
 	// Convert tick/s -> RPM
 //	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
 	*velocity = (tick * 1000.0 * TICK2WHEEL *60) / stepTime;
-	errorCode = mlsPeriphMotorRightPIDUpdateRealValue(*velocity);
+
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
@@ -461,6 +467,7 @@ mlsErrorCode_t mlsPeriphMotorPIDInit(void)
 			.Ki = MOTOR_LEFT_KI,
 			.Kd = MOTOR_LEFT_KD,
 			.setPoint = 0,
+			.controlValue = 0,
 	};
 
 	errorCode = mlsMotorPIDSetConfig(motorLeftPIDHandle, motorLeftPIDConfig);
@@ -836,7 +843,7 @@ mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void)
+mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(uint32_t stepTime)
 {
 	if(motorLeftPIDHandle == NULL)
 	{
@@ -844,8 +851,7 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void)
 	}
 
 	mlsErrorCode_t errorCode = MLS_ERROR;
-
-//	errorCode = mlsMotorPIDCalculate(motorLeftPIDHandle);
+	errorCode = mlsMotorPIDCalculate(motorLeftPIDHandle,(float)stepTime / 1000.0);
 
 	if(errorCode != MLS_SUCCESS)
 	{
@@ -960,18 +966,27 @@ mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void)
 
 	return MLS_SUCCESS;
 }
-int16_t cerrorMax = -1000;
-int16_t cerrorMin = 1000;
+
 mlsErrorCode_t mlsPeriphMotorRightFuzzyCalculate(float stepTime)
 {
-	fuzzy_input_variable_t KpError;
-	fuzzy_input_variable_t KpCerror;
-	fuzzy_input_variable_t KiError;
-	fuzzy_input_variable_t KiCerror;
-	fuzzy_input_variable_t KdError;
-	fuzzy_input_variable_t KdCerror;
+//	fuzzy_input_variable_t KpError;
+//	fuzzy_input_variable_t KpCerror;
+//	fuzzy_input_variable_t KiError;
+//	fuzzy_input_variable_t KiCerror;
+//	fuzzy_input_variable_t KdError;
+//	fuzzy_input_variable_t KdCerror;
 
-	float cerror = (motorRightPIDHandle->error - motorRightPIDHandle->preError) / stepTime;
+	static float error = 0;
+	static float preError = 0;
+
+	float setPoint = 0, realValue = 0;
+	mlsPeriphMotorRightPIDGetSetPoint(&setPoint);
+	mlsPeriphMotorRightPIDGetRealValue(&realValue);
+
+	preError = error;
+	error = setPoint - realValue;
+	float cerror = (error - preError) / stepTime;
+
 	if(cerror > cerrorMax)	cerrorMax = cerror;
 	else if(cerror < cerrorMin)	cerrorMin = cerror;
 
@@ -986,6 +1001,50 @@ mlsErrorCode_t mlsPeriphMotorRightFuzzyCalculate(float stepTime)
 //	motorRightPIDHandle->Kp = Kp_calculate(KpError, KpCerror);
 //	motorRightPIDHandle->Ki = Ki_calculate(KiError, KiCerror);
 //	motorRightPIDHandle->Kd = Kd_calculate(KdError, KdCerror);
+
+	return MLS_SUCCESS;
+}
+float error = 0;
+float cerror = 0;
+
+mlsErrorCode_t mlsPeriphMotorLeftFuzzyCalculate(float stepTime)
+{
+	fuzzy_input_variable_t KpError;
+	fuzzy_input_variable_t KpCerror;
+	float Kp = 0;
+	fuzzy_input_variable_t KiError;
+	fuzzy_input_variable_t KiCerror;
+	float Ki = 0;
+	fuzzy_input_variable_t KdError;
+	fuzzy_input_variable_t KdCerror;
+	float Kd = 0;
+
+
+	static float preError = 0;
+
+	float setPoint = 0, realValue = 0;
+	mlsPeriphMotorLeftPIDGetSetPoint(&setPoint);
+	mlsPeriphMotorLeftPIDGetRealValue(&realValue);
+
+	preError = error;
+	error = setPoint - realValue;
+	cerror = (error - preError) / stepTime;
+
+	if(cerror > cerrorMax)	cerrorMax = cerror;
+
+	KpError = Kp_calculate_e(error);
+	KpCerror = Kp_calculate_ce(cerror);
+	KiError = Ki_calculate_e(error);
+	KiCerror = Ki_calculate_ce(cerror);
+	KdError = Kd_calculate_e(error);
+	KdCerror = Kd_calculate_ce(cerror);
+
+	Kp = Kp_calculate(KpError, KpCerror);
+	mlsPeriphMotorLeftPIDSetKp(Kp);
+	Ki = Ki_calculate(KiError, KiCerror);
+	mlsPeriphMotorLeftPIDSetKi(Ki);
+	Kd = Kd_calculate(KdError, KdCerror);
+	mlsPeriphMotorLeftPIDSetKd(Kd);
 
 	return MLS_SUCCESS;
 }

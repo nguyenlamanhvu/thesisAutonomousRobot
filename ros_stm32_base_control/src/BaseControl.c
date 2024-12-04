@@ -29,6 +29,8 @@
 uint8_t gBaseControlTimeUpdateFlag[10];
 extern uint8_t leftFuzzyMode;
 extern uint8_t rightFuzzyMode;
+extern uint8_t rightMotorRun;
+extern uint8_t leftMotorRun;
 extern TIM_HandleTypeDef htim6;
 
 #if (USE_UART_GUI == 1)
@@ -51,6 +53,9 @@ mlsErrorCode_t mlsBaseControlInit(void)
 	errorCode = mlsPeriphEncoderInit();
 	errorCode = mlsPeriphMotorPIDInit();
 
+//	mlsPeriphMotorRightSetSpeed(100);
+//	mlsPeriphMotorLeftSetSpeed(50);
+
 	/* Start Timer Interrupt*/
 	errorCode = mlsBaseControlStartTimerInterrupt(&htim6);
 #if (USE_UART_ROS == 1)
@@ -61,11 +66,10 @@ mlsErrorCode_t mlsBaseControlInit(void)
 #endif
 	return errorCode;
 }
-
+int32_t leftTick;
 mlsErrorCode_t mlsBaseControlMain(void)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
-
 #if (USE_UART_ROS == 1)
 	/* Control motor*/
 	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
@@ -140,19 +144,19 @@ mlsErrorCode_t mlsBaseControlMain(void)
 		gGuiUpdateParameter = 0;
 	}
 
-	/* Compute Fuzzy*/
-	if(gBaseControlTimeUpdateFlag[COMPUTE_FUZZY_CONTROLLER_INDEX] == 1 && (rightFuzzyMode == 1 || leftFuzzyMode == 1))
-	{
-		mlsBaseControlCalculateFuzzy();
-		gBaseControlTimeUpdateFlag[COMPUTE_FUZZY_CONTROLLER_INDEX] = 0;
-	}
-
 	/* Control motor*/
 	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
 	{
 		mlsBaseControlCalculatePID();
 		mlsBaseControlSetControlValue();
 		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
+	}
+
+	/* Compute Fuzzy*/
+	if(gBaseControlTimeUpdateFlag[COMPUTE_FUZZY_CONTROLLER_INDEX] == 1 /*&& leftMotorRun == 1 */&& (rightFuzzyMode == 1 || leftFuzzyMode == 1))
+	{
+		mlsBaseControlCalculateFuzzy();
+		gBaseControlTimeUpdateFlag[COMPUTE_FUZZY_CONTROLLER_INDEX] = 0;
 	}
 
 	/* Publish motor velocity data to gui */

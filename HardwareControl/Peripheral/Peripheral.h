@@ -564,7 +564,7 @@ mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void);
+mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(uint32_t stepTime);
 
 /*
  * @brief   Calculate PID control value of right motor.
@@ -622,6 +622,7 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
 mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void);
 
 mlsErrorCode_t mlsPeriphMotorRightFuzzyCalculate(float stepTime);
+mlsErrorCode_t mlsPeriphMotorLeftFuzzyCalculate(float stepTime);
 
 #ifdef __cplusplus
 }

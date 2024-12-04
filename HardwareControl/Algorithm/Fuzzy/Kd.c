@@ -1,25 +1,17 @@
 #include "fuzzy.h"
 
-#define PVS_weight 1
-#define PMS_weight 1
-#define PM_weight 1
-#define PL_weight 1
-#define PVL_weight 1
-
-#define NL_error	1
-#define NS_error	1
-#define PS_error	1
-#define PL_error	1
-
-#define NL_cerror	1
-#define NS_cerror	1
-#define PS_cerror	1
-#define PL_cerror	1
+#define PVS_weight 	0.000193
+#define PMS_weight 	0.000251
+#define PM_weight 	0.000302
+#define PML_weight	0.000451
+#define PL_weight 	0.001218
+#define PVL_weight 	0.002051
 
 typedef struct {
     float PVS;
     float PMS;
     float PM;
+    float PML;
     float PL;
     float PVL;
 } fuzzy_output_variable_t;
@@ -110,6 +102,7 @@ float Kd_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce) {
             if (strcmp(output, "PVS") == 0) out_variable.PVS = fmaxf(out_variable.PVS, rule_strength);
             else if (strcmp(output, "PMS") == 0) out_variable.PMS = fmaxf(out_variable.PMS, rule_strength);
             else if (strcmp(output, "PM") == 0) out_variable.PM = fmaxf(out_variable.PM, rule_strength);
+            else if (strcmp(output, "PML") == 0) out_variable.PML = fmaxf(out_variable.PML, rule_strength);
             else if (strcmp(output, "PL") == 0) out_variable.PL = fmaxf(out_variable.PL, rule_strength);
             else if (strcmp(output, "PVL") == 0) out_variable.PVL = fmaxf(out_variable.PVL, rule_strength);
         }
@@ -117,8 +110,8 @@ float Kd_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce) {
 
     float Kd = (out_variable.PVS * PVS_weight + out_variable.PMS * PMS_weight +
                 out_variable.PM * PM_weight + out_variable.PL * PL_weight +
-                out_variable.PVL * PVL_weight) /
+                out_variable.PVL * PVL_weight + out_variable.PML * PML_weight) /
                (out_variable.PVS + out_variable.PMS + out_variable.PM +
-                out_variable.PL + out_variable.PVL);
+                out_variable.PL + out_variable.PVL + out_variable.PML);
     return Kd;
 }

@@ -14,6 +14,16 @@
 #include "compilerSwitch.h"
 #include <string.h>
 
+#define NL_error	-60
+#define NS_error	-5
+#define PS_error	5
+#define PL_error	60
+
+#define NL_cerror	-3.11
+#define NS_cerror	-0.18
+#define PS_cerror	0.18
+#define PL_cerror	3.11
+
 typedef struct {
     float NL;
     float NS;

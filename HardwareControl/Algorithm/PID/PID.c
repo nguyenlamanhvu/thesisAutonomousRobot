@@ -53,7 +53,7 @@ mlsErrorCode_t mlsMotorPIDSetConfig(motorPIDHandle_t handle, motorPIDCfg_t confi
 		return MLS_ERROR_NULL_PTR;
 	}
 
-	handle->Kd = config.Kp;
+	handle->Kp = config.Kp;
 	handle->Ki = config.Ki;
 	handle->Kd = config.Kd;
 	handle->setPoint = config.setPoint;

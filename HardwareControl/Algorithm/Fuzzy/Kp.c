@@ -1,21 +1,11 @@
 #include "fuzzy.h"
 
-#define PVL_weight 1
-#define PML_weight 1
-#define PVS_weight 1
-#define PMS_weight 1
-#define PL_weight 1
-#define PS_weight 1
-
-#define NL_error	1
-#define NS_error	1
-#define PS_error	1
-#define PL_error	1
-
-#define NL_cerror	1
-#define NS_cerror	1
-#define PS_cerror	1
-#define PL_cerror	1
+#define PVL_weight 2.1845
+#define PML_weight 1.734
+#define PVS_weight 0.978
+#define PMS_weight 1.067
+#define PL_weight 2.0775
+#define PS_weight 1.09175
 
 typedef struct {
     float PVL;

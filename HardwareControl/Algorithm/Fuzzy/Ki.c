@@ -1,35 +1,21 @@
 #include "fuzzy.h"
 
-#define PVL_weight 1
-#define PML_weight 1
-#define PVS_weight 1
-#define PMS_weight 1
-#define PL_weight 1
-#define PS_weight 1
-
-#define NL_error	1
-#define NS_error	1
-#define PS_error	1
-#define PL_error	1
-
-#define NL_cerror	1
-#define NS_cerror	1
-#define PS_cerror	1
-#define PL_cerror	1
+#define PMS_weight 	1.899152
+#define PM_weight 	3.297153
+#define PS_weight 	0.810561
+#define PVS_weight	0.651712
 
 typedef struct {
-    float PVL;
-    float PML;
-    float PVS;
     float PMS;
-    float PL;
     float PS;
+    float PM;
+    float PVS;
 } fuzzy_output_variable_t;
 
 const char *rule_base_Ki[5][5] = {
     {"PM", "PM", "PM", "PM", "PM"},
     {"PMS", "PMS", "PMS", "PMS", "PMS"},
-    {"PS", "PS", "PS", "PS", "PS"},
+    {"PS", "PS", "PVS", "PS", "PS"},
     {"PMS", "PMS", "PMS", "PMS", "PMS"},
     {"PM", "PM", "PM", "PM", "PM"}
 };
@@ -110,14 +96,15 @@ float Ki_calculate(fuzzy_input_variable_t e, fuzzy_input_variable_t ce) {
             float rule_strength = fminf(memberships[i], ce_memberships[j]);
             const char *output = rule_base_Ki[i][j];
 
-            if (strcmp(output, "PM") == 0) out_variable.PML = fmaxf(out_variable.PML, rule_strength);
+            if (strcmp(output, "PM") == 0) out_variable.PM = fmaxf(out_variable.PM, rule_strength);
             else if (strcmp(output, "PMS") == 0) out_variable.PMS = fmaxf(out_variable.PMS, rule_strength);
             else if (strcmp(output, "PS") == 0) out_variable.PS = fmaxf(out_variable.PS, rule_strength);
+            else if (strcmp(output, "PVS") == 0) out_variable.PVS = fmaxf(out_variable.PVS, rule_strength);
         }
     }
 
     float Ki = 0;
-    Ki = (out_variable.PML * PML_weight + out_variable.PMS * PMS_weight + out_variable.PS * PS_weight) /
-         (out_variable.PML + out_variable.PMS + out_variable.PS);
+    Ki = (out_variable.PM * PM_weight + out_variable.PMS * PMS_weight + out_variable.PS * PS_weight + out_variable.PVS * PVS_weight) /
+         (out_variable.PM + out_variable.PMS + out_variable.PS + out_variable.PVS);
     return Ki;
 }

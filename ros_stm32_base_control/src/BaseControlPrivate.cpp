@@ -68,6 +68,9 @@ typedef enum {
 extern dataFrame_t gGuiRxDataFrame;
 extern dataFrame_t gGuiTxDataFrame;
 #endif
+
+uint8_t rightMotorRun = 0;
+uint8_t leftMotorRun = 0;
 /********** Local (static) function declaration section ***********************/
 static sensor_msgs::Imu BaseControlGetIMU(void);
 static sensor_msgs::MagneticField BaseControlGetMag(void);
@@ -452,7 +455,7 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 
 	gGuiTxDataFrame.header = 0x0A;
 
-	if(gGuiRxDataFrame.mode == GUI_SET_LEFT_RUN_MODE || gGuiRxDataFrame.mode == GUI_SET_LEFT_STOP_MODE)
+	if(gGuiRxDataFrame.mode == GUI_SET_LEFT_RUN_MODE || gGuiRxDataFrame.mode == GUI_SET_LEFT_STOP_MODE || gGuiRxDataFrame.mode == GUI_STOP_LEFT_FUZZY_MODE)
 	{
 		gGuiTxDataFrame.mode = GUI_RECEIVE_LEFT_SPEED_MODE;
 		errorCode = mlsPeriphMotorLeftPIDGetRealValue(&uartData.floatValue);
@@ -463,7 +466,7 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length = sizeof(FloatByteArray);
 	}
-	else if(gGuiRxDataFrame.mode == GUI_SET_RIGHT_RUN_MODE || gGuiRxDataFrame.mode == GUI_SET_RIGHT_STOP_MODE)
+	else if(gGuiRxDataFrame.mode == GUI_SET_RIGHT_RUN_MODE || gGuiRxDataFrame.mode == GUI_SET_RIGHT_STOP_MODE || gGuiRxDataFrame.mode == GUI_STOP_RIGHT_FUZZY_MODE)
 	{
 		gGuiTxDataFrame.mode = GUI_RECEIVE_RIGHT_SPEED_MODE;
 		errorCode = mlsPeriphMotorRightPIDGetRealValue(&uartData.floatValue);
@@ -530,7 +533,7 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 	{
 		gGuiTxDataFrame.mode = GUI_RECEIVE_LEFT_FUZZY_MODE;
 		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetSetPoint(&uartData.floatValue);
+		mlsPeriphMotorLeftPIDGetRealValue(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 		/*!< Get Kp */
@@ -546,15 +549,12 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
-		/*!< Clear Rx buffer */
-		memset(&gGuiRxDataFrame, 0, sizeof(dataFrame_t));
-
 	}
 	else if(rightFuzzyMode == 1)
 	{
 		gGuiTxDataFrame.mode = GUI_RECEIVE_RIGHT_FUZZY_MODE;
 		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetSetPoint(&uartData.floatValue);
+		mlsPeriphMotorRightPIDGetRealValue(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 		/*!< Get Kp */
@@ -569,8 +569,6 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Clear Rx buffer */
-		memset(&gGuiRxDataFrame, 0, sizeof(dataFrame_t));
 
 	}
 	else
@@ -599,11 +597,13 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 	{
 	case GUI_SET_LEFT_STOP_MODE:
 		mlsPeriphMotorLeftStop();
+		leftMotorRun = 0;
 		break;
 	case GUI_SET_LEFT_FUZZY_MODE:
 		leftFuzzyMode = 1;
 		rightFuzzyMode = 0;
 	case GUI_SET_LEFT_RUN_MODE:
+		leftMotorRun = 1;
 		mlsPeriphMotorLeftStart();
 		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff, 4);
 		errorCode = mlsPeriphMotorLeftPIDSetSetPoint(uartData.floatValue);
@@ -635,11 +635,13 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 		break;
 	case GUI_SET_RIGHT_STOP_MODE:
 		mlsPeriphMotorRightStop();
+		rightMotorRun = 0;
 		break;
 	case GUI_SET_RIGHT_FUZZY_MODE:
 		rightFuzzyMode = 1;
 		leftFuzzyMode = 0;
 	case GUI_SET_RIGHT_RUN_MODE:
+		rightMotorRun = 1;
 		mlsPeriphMotorRightStart();
 		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff, 4);
 		errorCode = mlsPeriphMotorRightPIDSetSetPoint(uartData.floatValue);
@@ -677,9 +679,11 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 		//Turn on flag
 		getRightParameter = 1;
 		break;
-	default:
-		rightFuzzyMode = 0;
+	case GUI_STOP_LEFT_FUZZY_MODE:
 		leftFuzzyMode = 0;
+	case GUI_STOP_RIGHT_FUZZY_MODE:
+		rightFuzzyMode = 0;
+	default:
 		break;
 	}
 
@@ -717,17 +721,17 @@ void mlsBaseControlCalculatePID(void)
 	/* Update time */
 	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
 	/* Get tick from encoder */
-//	mlsPeriphEncoderLeftGetTick(&leftTick);
-	mlsPeriphEncoderRightGetTick(&rightTick);
+	mlsPeriphEncoderLeftGetTick(&leftTick);
+//	mlsPeriphEncoderRightGetTick(&rightTick);
 	/* Calculate linear velocity of 2 motors*/
-//	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &goalMotorVelocity[LEFT]);
-	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &goalMotorVelocity[RIGHT]);
+	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &goalMotorVelocity[LEFT]);
+//	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &goalMotorVelocity[RIGHT]);
 	/* Update real value to PID controller */
-//	mlsPeriphMotorLeftPIDUpdateRealValue(goalMotorVelocity[LEFT]);
+	mlsPeriphMotorLeftPIDUpdateRealValue(goalMotorVelocity[LEFT]);
 //	mlsPeriphMotorRightPIDUpdateRealValue(goalMotorVelocity[RIGHT]);
 	/* Calculate PID */
-//	mlsPeriphMotorLeftPIDCalculate();
-	mlsPeriphMotorRightPIDCalculate(stepTime);
+	mlsPeriphMotorLeftPIDCalculate(stepTime);
+//	mlsPeriphMotorRightPIDCalculate(stepTime);
 }
 
 uint32_t mlsBaseControlGetControlVelocityTime(void)
@@ -760,13 +764,17 @@ void mlsBaseControlPublishTest(int32_t tick)
 	sprintf(rosLogBuffer, "Right tick: %ld", tick);
 	rosNodeHandle.loginfo(rosLogBuffer);
 }
-
+float rightMotorVel = 0;
+float leftMotorVel;
 void mlsBaseControlCalculateFuzzy(void)
 {
 	/* Update time */
-	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
+	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_FUZZY]);
+	int32_t rightTick, leftTick;
 
-	mlsPeriphMotorRightFuzzyCalculate(stepTime);
+//	mlsPeriphMotorRightFuzzyCalculate(stepTime);
+
+	mlsPeriphMotorLeftFuzzyCalculate(stepTime);
 }
 
 /********** Class function implementation section *****************************/
