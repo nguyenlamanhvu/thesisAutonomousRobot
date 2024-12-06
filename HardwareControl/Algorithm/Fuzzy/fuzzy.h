@@ -14,10 +14,10 @@
 #include "compilerSwitch.h"
 #include <string.h>
 
-#define NL_error	-60
+#define NL_error	-40
 #define NS_error	-5
 #define PS_error	5
-#define PL_error	60
+#define PL_error	40
 
 #define NL_cerror	-3.11
 #define NS_cerror	-0.18

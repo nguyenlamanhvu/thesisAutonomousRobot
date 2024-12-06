@@ -181,6 +181,7 @@ void mlsBaseControlSetVelocityGoal(void);
 void mlsBaseControlSetControlValue(void);
 void mlsBaseControlPublishTest(int32_t tick);
 void mlsBaseControlCalculateFuzzy(void);
+void mlsBaseControlCalculatePIDParameter(void);
 #ifdef __cplusplus
 }
 #endif

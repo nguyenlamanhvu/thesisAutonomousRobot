@@ -163,6 +163,7 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	if(gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] == 1)
 	{
 		mlsBaseControlGuiPublishData();
+//		mlsBaseControlCalculatePIDParameter();
 		gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] = 0;
 	}
 	errorCode = MLS_SUCCESS;
