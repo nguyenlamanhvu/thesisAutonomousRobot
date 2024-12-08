@@ -185,8 +185,8 @@ mlsErrorCode_t mlsMotorPIDGetSetPoint(motorPIDHandle_t handle, float *setPoint)
 float partP, partI, partD;
 //float Error = 0.0;
 //float preError = 0.0;
-float pre2Error = 0.0;
-float preOut = 0.0;
+//float pre2Error = 0.0;
+//float preOut = 0.0;
 mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle, float stepTime)
 {
 	/* Check input conditions */
@@ -195,19 +195,15 @@ mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle, float stepTime)
 		return MLS_ERROR_NULL_PTR;
 	}
 
-
-
-
-
-	pre2Error = handle->preError;
+	handle->pre2Error = handle->preError;
 	handle->preError = handle->error;
 	handle->error = handle->setPoint - handle->realValue;
 	partP = handle->Kp * (handle->error - handle->preError);
 	partI = 0.5 * handle->Ki * stepTime * (handle->error + handle->preError);
-	partD = handle->Kd / stepTime * (handle->error - 2*handle->preError + pre2Error);
-	handle->controlValue = preOut + partP + partI + partD;
+	partD = handle->Kd / stepTime * (handle->error - 2*handle->preError + handle->pre2Error);
+	handle->controlValue = handle->preOut + partP + partI + partD;
 	handle->controlValue = mlsPeriphMotorConstrain(handle->controlValue, MIN_MOTOR_VELOCITY, MAX_MOTOR_VELOCITY);
-	preOut = handle->controlValue;
+	handle->preOut = handle->controlValue;
 
 	return MLS_SUCCESS;
 }
@@ -234,6 +230,42 @@ mlsErrorCode_t mlsMotorPIDGetControlValue(motorPIDHandle_t handle, float *contro
 	}
 
 	*controlValue = handle->controlValue;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDClearParameter(motorPIDHandle_t handle, motorPIDCfg_t config)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	handle->Kp = config.Kp;
+	handle->Ki = config.Ki;
+	handle->Kd = config.Kd;
+	handle->controlValue = 0;
+	handle->error = 0;
+	handle->preError = 0;
+	handle->realValue = 0;
+	handle->setPoint = 0;
+	handle->stepTime = 0;
+	handle->pre2Error = 0;
+	handle->preOut = 0;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDSetControlValue(motorPIDHandle_t handle, float controlValue)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	handle->controlValue = controlValue;
 
 	return MLS_SUCCESS;
 }

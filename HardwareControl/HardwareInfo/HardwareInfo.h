@@ -34,7 +34,7 @@ extern "C"
 #if (USE_UART_MATLAB == 1)
 #define UART_MAX_LENGTH 	36
 #elif (USE_UART_GUI == 1)
-#define UART_MAX_LENGTH 	20
+#define UART_MAX_LENGTH 	24
 #else
 #define UART_MAX_LENGTH		100
 #endif

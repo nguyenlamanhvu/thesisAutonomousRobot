@@ -1,9 +1,9 @@
 #include "fuzzy.h"
 
-#define PMS_weight 	7.899152
-#define PM_weight 	8.397153
-#define PS_weight 	7.010561
-#define PVS_weight	6.351712
+#define PMS_weight 	8.899152
+#define PM_weight 	9.397153
+#define PS_weight 	8.010561
+#define PVS_weight	7.351712
 
 typedef struct {
     float PMS;

@@ -611,6 +611,28 @@ mlsErrorCode_t mlsPeriphMotorRightPIDUpdateRealValue(float realValue);
 mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
 
 /*
+ * @brief   Update control value to left motor.
+ *
+ * @param   controlValue: Control value.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDSetControlValue(float controlValue);
+
+/*
+ * @brief   Get control value of left motor.
+ *
+ * @param   *controlValue: pointer of control value variable
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetControl(float* controlValue);
+
+/*
  * @brief   Update control value to right motor.
  *
  * @param   none
@@ -621,8 +643,52 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
  */
 mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void);
 
+/*
+ * @brief   Get control value of right motor.
+ *
+ * @param   *controlValue: pointer of control value variable
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDGetControl(float* controlValue);
+
+/*
+ * @brief   Update control value to right motor.
+ *
+ * @param   controlValue: Control value.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDSetControlValue(float controlValue);
+
 mlsErrorCode_t mlsPeriphMotorRightFuzzyCalculate(float stepTime);
 mlsErrorCode_t mlsPeriphMotorLeftFuzzyCalculate(float stepTime);
+
+/*
+ * @brief   Clear parameter of left motor PID
+ *
+ * @param   none
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDClearParameter(void);
+
+/*
+ * @brief   Clear parameter of right motor PID
+ *
+ * @param   none
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDClearParameter(void);
 
 #ifdef __cplusplus
 }

@@ -465,7 +465,18 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 			return errorCode;
 		}
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
-		gGuiTxDataFrame.length = sizeof(FloatByteArray);
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		if(gGuiRxDataFrame.mode == GUI_SET_LEFT_STOP_MODE)
+		{
+			mlsPeriphMotorLeftPIDSetControlValue(0);
+		}
+		errorCode = mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 	}
 	else if(gGuiRxDataFrame.mode == GUI_SET_RIGHT_RUN_MODE || gGuiRxDataFrame.mode == GUI_SET_RIGHT_STOP_MODE || gGuiRxDataFrame.mode == GUI_STOP_RIGHT_FUZZY_MODE)
 	{
@@ -476,7 +487,18 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 			return errorCode;
 		}
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
-		gGuiTxDataFrame.length = sizeof(FloatByteArray);
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		if(gGuiRxDataFrame.mode == GUI_SET_RIGHT_STOP_MODE)
+		{
+			mlsPeriphMotorRightPIDSetControlValue(0);
+		}
+		errorCode = mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 	}
 	else if(getLeftParameter == 1)
 	{
@@ -485,17 +507,21 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		mlsPeriphMotorLeftPIDGetSetPoint(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get Kp */
-		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
+		/*!< Get control value */
+		mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
+		/*!< Get Kp */
+		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		/*!< Get Ki */
+		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get Kd */
+		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 16, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
 		/*!< Clear Rx buffer */
@@ -511,17 +537,21 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		mlsPeriphMotorRightPIDGetSetPoint(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get Kp */
-		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
+		/*!< Get control value */
+		mlsPeriphMotorRightPIDGetControl(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
+		/*!< Get Kp */
+		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		/*!< Get Ki */
+		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get Kd */
+		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 16, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
 		/*!< Clear Rx buffer */
@@ -533,42 +563,50 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 	else if(leftFuzzyMode == 1)
 	{
 		gGuiTxDataFrame.mode = GUI_RECEIVE_LEFT_FUZZY_MODE;
-		/*!< Get set point */
+		/*!< Get real value */
 		mlsPeriphMotorLeftPIDGetRealValue(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get Kp */
-		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
+		/*!< Get control value */
+		mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
+		/*!< Get Kp */
+		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get set point */
+		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 16, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
 	}
 	else if(rightFuzzyMode == 1)
 	{
 		gGuiTxDataFrame.mode = GUI_RECEIVE_RIGHT_FUZZY_MODE;
-		/*!< Get set point */
+		/*!< Get real value */
 		mlsPeriphMotorRightPIDGetRealValue(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get Kp */
-		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
+		/*!< Get control value */
+		mlsPeriphMotorRightPIDGetControl(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
+		/*!< Get Kp */
+		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get set point */
+		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 16, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
 	}
@@ -598,6 +636,7 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 	{
 	case GUI_SET_LEFT_STOP_MODE:
 		mlsPeriphMotorLeftStop();
+		mlsPeriphMotorLeftPIDClearParameter();
 		leftMotorRun = 0;
 		break;
 	case GUI_SET_LEFT_FUZZY_MODE:
@@ -636,6 +675,7 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 		break;
 	case GUI_SET_RIGHT_STOP_MODE:
 		mlsPeriphMotorRightStop();
+		mlsPeriphMotorRightPIDClearParameter();
 		rightMotorRun = 0;
 		break;
 	case GUI_SET_RIGHT_FUZZY_MODE:
@@ -682,8 +722,66 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 		break;
 	case GUI_STOP_LEFT_FUZZY_MODE:
 		leftFuzzyMode = 0;
+		mlsPeriphMotorLeftStart();
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff, 4);
+		errorCode = mlsPeriphMotorLeftPIDSetSetPoint(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff + 4, 4);
+		errorCode = mlsPeriphMotorLeftPIDSetKp(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff + 8, 4);
+		errorCode = mlsPeriphMotorLeftPIDSetKi(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff + 12, 4);
+		errorCode = mlsPeriphMotorLeftPIDSetKd(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+		break;
 	case GUI_STOP_RIGHT_FUZZY_MODE:
 		rightFuzzyMode = 0;
+		mlsPeriphMotorRightStart();
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff, 4);
+		errorCode = mlsPeriphMotorRightPIDSetSetPoint(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff + 4, 4);
+		errorCode = mlsPeriphMotorRightPIDSetKp(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff + 8, 4);
+		errorCode = mlsPeriphMotorRightPIDSetKi(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+
+		memcpy(uartData.byteArray, gGuiRxDataFrame.dataBuff + 12, 4);
+		errorCode = mlsPeriphMotorRightPIDSetKd(uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+		break;
 	default:
 		break;
 	}

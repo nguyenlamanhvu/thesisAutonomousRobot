@@ -43,6 +43,8 @@ typedef struct motorPID {
     float stepTime;
     float error;
     float preError;
+    float pre2Error;
+    float preOut;
 } motorPID_t;
 
 typedef struct motorPID *motorPIDHandle_t;
@@ -222,6 +224,30 @@ mlsErrorCode_t mlsMotorPIDUpdateRealValue(motorPIDHandle_t handle, float realVal
  *      - Others:      Fail.
  */
 mlsErrorCode_t mlsMotorPIDGetControlValue(motorPIDHandle_t handle, float *controlValue);
+
+/*
+ * @brief   Clear parameter of PID
+ *
+ * @param   handle Handle structure.
+ * @param   config Config structure.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDClearParameter(motorPIDHandle_t handle, motorPIDCfg_t config);
+
+/*
+ * @brief   Set Control value.
+ *
+ * @param   handle Handle structure.
+ * @param   controlValue Control Value.
+ *
+ * @return
+ *      - MLS_SUCCESS: Success.
+ *      - Others:      Fail.
+ */
+mlsErrorCode_t mlsMotorPIDSetControlValue(motorPIDHandle_t handle, float controlValue);
 
 #ifdef __cplusplus
 }
