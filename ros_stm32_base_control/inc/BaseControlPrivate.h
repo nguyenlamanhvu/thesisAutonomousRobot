@@ -136,6 +136,8 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void);
  * @return ErrorCode
  */
 mlsErrorCode_t mlsBaseControlGuiReceiveData(void);
+
+void mlsBaseControlCalculatePIDParameter(void);
 #endif
 
 /*
@@ -180,6 +182,7 @@ void mlsBaseControlSetVelocityGoal(void);
  */
 void mlsBaseControlSetControlValue(void);
 void mlsBaseControlPublishTest(int32_t tick);
+
 #ifdef __cplusplus
 }
 #endif

@@ -44,13 +44,13 @@
 /* Convert motor tick to the percentage of wheel */
 #define TICK2WHEEL		1.0f/(NUM_PULSE_PER_ROUND * MICROSTEP_DIV)
 
-#define DEFAULT_MOTOR_DUTY			127					//Use max duty 255 (0xFF)
+#define DEFAULT_MOTOR_DUTY			0
 #define DEFAULT_MOTOR_FREQUENCY		12500
 
 /* PID default value */
-#define MOTOR_LEFT_KP		0
-#define MOTOR_LEFT_KI		0
-#define MOTOR_LEFT_KD		0
+#define MOTOR_LEFT_KP		1.40208989664286
+#define MOTOR_LEFT_KI		7.98301209873064
+#define MOTOR_LEFT_KD		0.00000239133617
 
 #define MOTOR_RIGHT_KP		0
 #define MOTOR_RIGHT_KI		0
@@ -357,6 +357,9 @@ mlsErrorCode_t mlsPeriphEncoderInit(void)
 		return errorCode;
 	}
 
+	mlsEncoderSetCounter(encoderLeftHandle, NUM_PULSE_PER_ROUND * MICROSTEP_DIV / 2);
+	mlsEncoderSetCounter(encoderRightHandle, NUM_PULSE_PER_ROUND * MICROSTEP_DIV / 2);
+
 	mlsEncoderSetMode(encoderLeftHandle, ENCODER_COUNTER_MODE_UP);
 	mlsEncoderSetMode(encoderRightHandle, ENCODER_COUNTER_MODE_UP);
 
@@ -384,7 +387,7 @@ mlsErrorCode_t mlsPeriphEncoderLeftGetTick(int32_t *tick)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity)
+mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(int32_t tick, uint32_t stepTime, float *velocity)
 {
 	if(motorLeftPIDHandle == NULL)
 	{
@@ -396,7 +399,7 @@ mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(uint32_t tick, uint32_t stepT
 	// Convert tick/s -> RPM
 //	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
 	*velocity = (tick * 1000.0 * TICK2WHEEL *60) / stepTime;
-	errorCode = mlsPeriphMotorLeftPIDUpdateRealValue(*velocity);
+
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
@@ -423,7 +426,7 @@ mlsErrorCode_t mlsPeriphEncoderRightGetTick(int32_t *tick)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity)
+mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(int32_t tick, uint32_t stepTime, float *velocity)
 {
 	if(motorRightPIDHandle == NULL)
 	{
@@ -435,7 +438,7 @@ mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(uint32_t tick, uint32_t step
 	// Convert tick/s -> RPM
 //	*velocity = (tick * 1000.0 * TICK2RAD * WHEEL_RADIUS) / stepTime;
 	*velocity = (tick * 1000.0 * TICK2WHEEL *60) / stepTime;
-	errorCode = mlsPeriphMotorRightPIDUpdateRealValue(*velocity);
+
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
@@ -460,6 +463,8 @@ mlsErrorCode_t mlsPeriphMotorPIDInit(void)
 			.Ki = MOTOR_LEFT_KI,
 			.Kd = MOTOR_LEFT_KD,
 			.setPoint = 0,
+			.stepTime = 0.012,
+			.controlValue = 0,
 	};
 
 	errorCode = mlsMotorPIDSetConfig(motorLeftPIDHandle, motorLeftPIDConfig);
@@ -480,7 +485,7 @@ mlsErrorCode_t mlsPeriphMotorPIDInit(void)
 			.Ki = MOTOR_RIGHT_KI,
 			.Kd = MOTOR_RIGHT_KD,
 			.setPoint = 0,
-			.frequency = COMPUTE_PID_CONTROLLER_FREQUENCY,
+			.stepTime = 0.012,
 			.controlValue = 0,
 	};
 
@@ -835,7 +840,7 @@ mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void)
+mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(uint32_t stepTime)
 {
 	if(motorLeftPIDHandle == NULL)
 	{
@@ -843,8 +848,7 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void)
 	}
 
 	mlsErrorCode_t errorCode = MLS_ERROR;
-
-	errorCode = mlsMotorPIDCalculate(motorLeftPIDHandle);
+	errorCode = mlsMotorPIDCalculate(motorLeftPIDHandle,(float)stepTime / 1000.0);
 
 	if(errorCode != MLS_SUCCESS)
 	{
@@ -854,7 +858,7 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(void)
+mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(uint32_t stepTime)
 {
 	if(motorRightPIDHandle == NULL)
 	{
@@ -862,8 +866,7 @@ mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(void)
 	}
 
 	mlsErrorCode_t errorCode = MLS_ERROR;
-
-	errorCode = mlsMotorPIDCalculate(motorRightPIDHandle);
+	errorCode = mlsMotorPIDCalculate(motorRightPIDHandle,(float)stepTime / 1000.0);
 
 	if(errorCode != MLS_SUCCESS)
 	{
@@ -936,6 +939,42 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void)
 	return MLS_SUCCESS;
 }
 
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetControl(float* controlValue)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetControlValue(motorLeftPIDHandle, controlValue);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorLeftPIDSetControlValue(float controlValue)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDSetControlValue(motorLeftPIDHandle, controlValue);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
 mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void)
 {
 	if(motorRightPIDHandle == NULL)
@@ -953,6 +992,88 @@ mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void)
 	}
 
 	errorCode = mlsPeriphMotorRightSetSpeed(controlValue);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDGetControl(float* controlValue)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDGetControlValue(motorRightPIDHandle, controlValue);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDSetControlValue(float controlValue)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	mlsErrorCode_t errorCode = MLS_ERROR;
+
+	errorCode = mlsMotorPIDSetControlValue(motorRightPIDHandle, controlValue);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorLeftPIDClearParameter(void)
+{
+	if(motorLeftPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+	mlsErrorCode_t errorCode = MLS_ERROR;
+	motorPIDCfg_t motorLeftPIDConfig = {
+			.Kp = MOTOR_LEFT_KP,
+			.Ki = MOTOR_LEFT_KI,
+			.Kd = MOTOR_LEFT_KD,
+	};
+
+	errorCode = mlsMotorPIDClearParameter(motorLeftPIDHandle, motorLeftPIDConfig);
+
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphMotorRightPIDClearParameter(void)
+{
+	if(motorRightPIDHandle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+	mlsErrorCode_t errorCode = MLS_ERROR;
+	motorPIDCfg_t motorRightPIDConfig = {
+			.Kp = MOTOR_LEFT_KP,
+			.Ki = MOTOR_LEFT_KI,
+			.Kd = MOTOR_LEFT_KD,
+	};
+
+	errorCode = mlsMotorPIDClearParameter(motorRightPIDHandle, motorRightPIDConfig);
+
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;

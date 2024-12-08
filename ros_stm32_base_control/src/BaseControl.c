@@ -141,15 +141,6 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	/* Control motor*/
 	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
 	{
-		mlsBaseControlUpdateGoalVel();
-		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
-		{
-			mlsBaseControlSetVelocityZero();
-		}
-		else
-		{
-			mlsBaseControlSetVelocityGoal();
-		}
 		mlsBaseControlCalculatePID();
 		mlsBaseControlSetControlValue();
 		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
@@ -159,6 +150,7 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	if(gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] == 1)
 	{
 		mlsBaseControlGuiPublishData();
+//		mlsBaseControlCalculatePIDParameter();
 		gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] = 0;
 	}
 	errorCode = MLS_SUCCESS;

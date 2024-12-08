@@ -40,12 +40,13 @@
 
 #include "HardwareInfo.h"
 #include "BaseControlPrivate.h"
+#include "math.h"
 /********** Local Constant and compile switch definition section **************/
 #define ROS_TOPIC_IMU                       "imu"
 #define ROS_TOPIC_MAG						"mag"
 #define ROS_TOPIC_VEL						"robot_vel"
 #define ROS_TOPIC_CALLBACK_VEL				"callback_robot_vel"
-
+#define pi 3.14159265
 /********** Local Type definition section *************************************/
 #if (USE_UART_MATLAB == 1 || USE_UART_GUI == 1)
 typedef union {
@@ -457,7 +458,18 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 			return errorCode;
 		}
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
-		gGuiTxDataFrame.length = sizeof(FloatByteArray);
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		if(gGuiRxDataFrame.mode == GUI_SET_LEFT_STOP_MODE)
+		{
+			mlsPeriphMotorLeftPIDSetControlValue(0);
+		}
+		errorCode = mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 	}
 	else if(gGuiRxDataFrame.mode == GUI_SET_RIGHT_RUN_MODE || gGuiRxDataFrame.mode == GUI_SET_RIGHT_STOP_MODE)
 	{
@@ -468,7 +480,18 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 			return errorCode;
 		}
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
-		gGuiTxDataFrame.length = sizeof(FloatByteArray);
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		if(gGuiRxDataFrame.mode == GUI_SET_RIGHT_STOP_MODE)
+		{
+			mlsPeriphMotorRightPIDSetControlValue(0);
+		}
+		errorCode = mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
+		if(errorCode != MLS_SUCCESS)
+		{
+			return errorCode;
+		}
+		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 	}
 	else if(getLeftParameter == 1)
 	{
@@ -477,17 +500,21 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		mlsPeriphMotorLeftPIDGetSetPoint(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get Kp */
-		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
+		/*!< Get control value */
+		mlsPeriphMotorLeftPIDGetControl(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
+		/*!< Get Kp */
+		mlsPeriphMotorLeftPIDGetKp(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		/*!< Get Ki */
+		mlsPeriphMotorLeftPIDGetKi(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get Kd */
+		mlsPeriphMotorLeftPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 16, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
 		/*!< Clear Rx buffer */
@@ -503,17 +530,21 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 		mlsPeriphMotorRightPIDGetSetPoint(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get Kp */
-		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
+		/*!< Get control value */
+		mlsPeriphMotorRightPIDGetControl(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 4, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
+		/*!< Get Kp */
+		mlsPeriphMotorRightPIDGetKp(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 8, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
-		/*!< Get set point */
-		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		/*!< Get Ki */
+		mlsPeriphMotorRightPIDGetKi(&uartData.floatValue);
 		memcpy(gGuiTxDataFrame.dataBuff + 12, uartData.byteArray, sizeof(FloatByteArray));
+		gGuiTxDataFrame.length += sizeof(FloatByteArray);
+		/*!< Get Kd */
+		mlsPeriphMotorRightPIDGetKd(&uartData.floatValue);
+		memcpy(gGuiTxDataFrame.dataBuff + 16, uartData.byteArray, sizeof(FloatByteArray));
 		gGuiTxDataFrame.length += sizeof(FloatByteArray);
 
 		/*!< Clear Rx buffer */
@@ -521,6 +552,12 @@ mlsErrorCode_t mlsBaseControlGuiPublishData(void)
 
 		//Turn off flag
 		getRightParameter = 0;
+	}
+	else
+	{
+		/*!< Clear Tx buffer */
+		memset(&gGuiTxDataFrame, 0, sizeof(dataFrame_t));
+		return MLS_SUCCESS;
 	}
 
 	gGuiTxDataFrame.footer = 0x06;
@@ -542,6 +579,7 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 	{
 	case GUI_SET_LEFT_STOP_MODE:
 		mlsPeriphMotorLeftStop();
+		mlsPeriphMotorLeftPIDClearParameter();
 		break;
 	case GUI_SET_LEFT_RUN_MODE:
 		mlsPeriphMotorLeftStart();
@@ -575,6 +613,7 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 		break;
 	case GUI_SET_RIGHT_STOP_MODE:
 		mlsPeriphMotorRightStop();
+		mlsPeriphMotorRightPIDClearParameter();
 		break;
 	case GUI_SET_RIGHT_RUN_MODE:
 		mlsPeriphMotorRightStart();
@@ -621,6 +660,41 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 
 	return MLS_SUCCESS;
 }
+
+volatile  double sweap=0;
+float leftVel;
+volatile double_t k=0;
+uint8_t DataToSend[8];
+int8_t i=0;
+void mlsBaseControlCalculatePIDParameter(void)
+{
+	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_FUZZY]);
+	sweap = 99.0*sin(2 *pi * 0.1 * 40 * (pow(50, (k) / (200.0 * 40)) - 1) / log(50.0));
+	uartData.floatValue = sweap;
+	k=k+1;
+  	if(k == 4001)
+  	{
+  		mlsPeriphMotorLeftSetSpeed(0);
+  	}
+  	else
+  	{
+  	  	mlsPeriphMotorLeftSetSpeed(sweap);
+  	//  	errorCode = mlsPeriphUartSend(uartData.byteArray);
+  	  	for(i = 0; i < 4; i++) {
+  			DataToSend[i] = uartData.byteArray[i];
+  		}
+
+  	  	int32_t leftTick;
+
+  	  	mlsPeriphEncoderLeftGetTick(&leftTick);
+  	  	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &leftVel);
+  	  	uartData.floatValue = leftVel;
+  	  	for(i = 0; i < 4; i++) {
+  			DataToSend[i+4] = uartData.byteArray[i];
+  		}
+  	  	HAL_UART_Transmit(&huart2, DataToSend, 8,100);
+  	}
+}
 #endif
 
 mlsErrorCode_t mlsBaseControlUpdateImu(void)
@@ -643,8 +717,8 @@ void mlsBaseControlCalculatePID(void)
 	mlsPeriphMotorLeftPIDUpdateRealValue(goalMotorVelocity[LEFT]);
 	mlsPeriphMotorRightPIDUpdateRealValue(goalMotorVelocity[RIGHT]);
 	/* Calculate PID */
-	mlsPeriphMotorLeftPIDCalculate();
-	mlsPeriphMotorRightPIDCalculate();
+	mlsPeriphMotorLeftPIDCalculate(stepTime);
+	mlsPeriphMotorRightPIDCalculate(stepTime);
 }
 
 uint32_t mlsBaseControlGetControlVelocityTime(void)
@@ -677,7 +751,6 @@ void mlsBaseControlPublishTest(int32_t tick)
 	sprintf(rosLogBuffer, "Right tick: %ld", tick);
 	rosNodeHandle.loginfo(rosLogBuffer);
 }
-
 /********** Class function implementation section *****************************/
 
 /**@}*/

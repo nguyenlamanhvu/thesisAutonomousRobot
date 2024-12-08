@@ -36,6 +36,8 @@ extern "C"
 #define MAX_ANGULAR_VELOCITY        (MAX_LINEAR_VELOCITY / TURNING_RADIUS)  /*!< Max angular velocity */
 #define MIN_LINEAR_VELOCITY         -MAX_LINEAR_VELOCITY                    /*!< Min linear velocity */
 #define MIN_ANGULAR_VELOCITY        -MAX_ANGULAR_VELOCITY                   /*!< Min angular velocity */
+#define MAX_MOTOR_VELOCITY			99
+#define MIN_MOTOR_VELOCITY			-MAX_MOTOR_VELOCITY
 
 /* Step motor direction index */
 #define MOTORLEFT_DIR_FORWARD       0
@@ -319,7 +321,7 @@ mlsErrorCode_t mlsPeriphEncoderLeftGetTick(int32_t *tick);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity);
+mlsErrorCode_t mlsPeriphMotorLeftCalculateVelocity(int32_t tick, uint32_t stepTime, float *velocity);
 
 /*
  * @brief   Get tick value from right encoder.
@@ -343,7 +345,7 @@ mlsErrorCode_t mlsPeriphEncoderRightGetTick(int32_t *tick);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(uint32_t tick, uint32_t stepTime, float *velocity);
+mlsErrorCode_t mlsPeriphMotorRightCalculateVelocity(int32_t tick, uint32_t stepTime, float *velocity);
 
 /*
  * @brief   Initialize Motor PID with default parameters.
@@ -562,7 +564,7 @@ mlsErrorCode_t mlsPeriphMotorRightPIDGetSetPoint(float *setPoint);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void);
+mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(uint32_t stepTime);
 
 /*
  * @brief   Calculate PID control value of right motor.
@@ -573,7 +575,7 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDCalculate(void);
  *      - Handle structure: Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(void);
+mlsErrorCode_t mlsPeriphMotorRightPIDCalculate(uint32_t stepTime);
 
 /*
  * @brief   Update real value of left motor.
@@ -609,6 +611,28 @@ mlsErrorCode_t mlsPeriphMotorRightPIDUpdateRealValue(float realValue);
 mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
 
 /*
+ * @brief   Update control value to left motor.
+ *
+ * @param   controlValue: Control value.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDSetControlValue(float controlValue);
+
+/*
+ * @brief   Get control value of left motor.
+ *
+ * @param   *controlValue: pointer of control value variable
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDGetControl(float* controlValue);
+
+/*
  * @brief   Update control value to right motor.
  *
  * @param   none
@@ -618,6 +642,50 @@ mlsErrorCode_t mlsPeriphMotorLeftPIDSetControl(void);
  *      - Others:           Fail.
  */
 mlsErrorCode_t mlsPeriphMotorRightPIDSetControl(void);
+
+/*
+ * @brief   Get control value of right motor.
+ *
+ * @param   *controlValue: pointer of control value variable
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDGetControl(float* controlValue);
+
+/*
+ * @brief   Update control value to right motor.
+ *
+ * @param   controlValue: Control value.
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDSetControlValue(float controlValue);
+
+/*
+ * @brief   Clear parameter of left motor PID
+ *
+ * @param   none
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorLeftPIDClearParameter(void);
+
+/*
+ * @brief   Clear parameter of right motor PID
+ *
+ * @param   none
+ *
+ * @return
+ *      - Handle structure: Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphMotorRightPIDClearParameter(void);
 
 #ifdef __cplusplus
 }

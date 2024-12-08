@@ -46,7 +46,7 @@ extern "C"
 #define CONTROL_MOTOR_FREQUENCY				60		/* Frequency in Hz to control DC motor*/
 #define VEL_PUBLISH_FREQUENCY				10		/* Frequency in Hz to publish velocity*/
 #define DRIVE_INFORMATION_FREQUENCY			10		/* Frequency in Hz to publish drive information*/
-#define COMPUTE_PID_CONTROLLER_FREQUENCY	100		/* Frequency in Hz to compute PID controller*/
+#define COMPUTE_PID_CONTROLLER_FREQUENCY	CONTROL_MOTOR_FREQUENCY		/* Frequency in Hz to compute PID controller*/
 
 #define CONTROL_MOTOR_TIMEOUT               500     /*!< Period in ms to check control motor timeout */
 /********** Function declaration section **************************************/
