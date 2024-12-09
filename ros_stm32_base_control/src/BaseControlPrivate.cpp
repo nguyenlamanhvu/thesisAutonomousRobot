@@ -106,7 +106,6 @@ static uint8_t getLeftParameter = 0;
 static uint8_t getRightParameter = 0;
 #endif
 
-uint32_t stepControlRobotTime = 0;
 /********** Local function definition section *********************************/
 static ros::Time BaseControlGetROSTime(void)
 {
@@ -214,7 +213,7 @@ static void BaseControlCallbackCommandVelocity(const geometry_msgs::Twist &callb
 	/* Constrain velocity */
 
 	/* Update control robot time */
-	stepControlRobotTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT]);
+	rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT] = mlsHardwareInfoGetTickMs();
 }
 
 /********** Global function definition section ********************************/
@@ -723,7 +722,7 @@ void mlsBaseControlCalculatePID(void)
 
 uint32_t mlsBaseControlGetControlVelocityTime(void)
 {
-	return stepControlRobotTime;
+	return BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT]);
 }
 
 void mlsBaseControlSetVelocityZero(void)
@@ -735,6 +734,8 @@ void mlsBaseControlSetVelocityZero(void)
 void mlsBaseControlSetVelocityGoal(void)
 {
 	float rightWheelVelocity = 0.0, leftWheelVelocity = 0.0;
+
+
 
 	mlsPeriphMotorLeftPIDSetSetPoint(leftWheelVelocity);
 	mlsPeriphMotorRightPIDSetSetPoint(rightWheelVelocity);
