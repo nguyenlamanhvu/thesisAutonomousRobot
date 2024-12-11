@@ -32,7 +32,7 @@ extern "C"
 #define WHEEL_RADIUS                0.033                                   /*!< Wheel radius in meter */
 #define WHEEL_SEPARATION            0.165                                   /*!< Wheel separate distance in meter */
 #define TURNING_RADIUS              0.08                                    /*!< Turning radius in meter */
-#define MAX_LINEAR_VELOCITY         (WHEEL_RADIUS * 2 * PI * 60 / 60)       /*!< Max linear velocity */
+#define MAX_LINEAR_VELOCITY         (WHEEL_RADIUS * 2 * PI * 80 / 60)       /*!< Max linear velocity */			//(RPM max: 80)
 #define MAX_ANGULAR_VELOCITY        (MAX_LINEAR_VELOCITY / TURNING_RADIUS)  /*!< Max angular velocity */
 #define MIN_LINEAR_VELOCITY         -MAX_LINEAR_VELOCITY                    /*!< Min linear velocity */
 #define MIN_ANGULAR_VELOCITY        -MAX_ANGULAR_VELOCITY                   /*!< Min angular velocity */
@@ -52,6 +52,12 @@ extern "C"
 /* Step driver parameters */
 #define MICROSTEP_DIV               19.7        /*!< Step driver microstep divider */
 #define NUM_PULSE_PER_ROUND         500         /*!< The number of pulse per round of encoder */
+
+/* Convert motor tick to angular in radian */
+#define TICK2RAD        360.0f/(NUM_PULSE_PER_ROUND*MICROSTEP_DIV)*PI/180.0f
+
+/* Convert velocity unit (m/s -> RPM) */
+#define CONVERT_VELOCITY	60/(2 * PI * WHEEL_RADIUS)
 
 #define PI                  3.14159265359
 /********** Type definition section *******************************************/

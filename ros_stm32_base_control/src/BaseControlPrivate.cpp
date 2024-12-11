@@ -27,6 +27,7 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/String.h"
 #include "std_msgs/UInt16.h"
+#include "std_msgs/Float32MultiArray.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/MagneticField.h"
 #include "sensor_msgs/JointState.h"
@@ -41,11 +42,15 @@
 #include "HardwareInfo.h"
 #include "BaseControlPrivate.h"
 #include "math.h"
+#include "DifferentialDrive.h"
 /********** Local Constant and compile switch definition section **************/
 #define ROS_TOPIC_IMU                       "imu"
 #define ROS_TOPIC_MAG						"mag"
 #define ROS_TOPIC_VEL						"robot_vel"
+#define ROS_TOPIC_WHEEL_VEL					"robot__wheel_vel"
 #define ROS_TOPIC_CALLBACK_VEL				"callback_robot_vel"
+#define ROS_TOPIC_JOINT_STATES              "joint_states"
+#define ROS_TOPIC_ODOM                      "odom"
 #define pi 3.14159265
 /********** Local Type definition section *************************************/
 #if (USE_UART_MATLAB == 1 || USE_UART_GUI == 1)
@@ -57,7 +62,8 @@ typedef union {
 
 typedef enum {
 	UPDATE_TIME_PID = 0x00,
-	UPDATE_TIME_CONTROL_ROBOT =0x01,
+	UPDATE_TIME_CONTROL_ROBOT = 0x01,
+	UPDATE_TIME_PUBLISH_DRIVE = 0x02,
 }updateTime_t;
 /********** Local Macro definition section ************************************/
 
@@ -80,21 +86,41 @@ char rosLogBuffer[100];          	/*!< ROS log message buffer */
 unsigned long rosPrevUpdateTime[2];	/*!< ROS previous update time */
 
 char imuFrameId[20];
+char magFrameId[20];
+char odomHeaderFrameId[30];
+char odomChildFrameId[30];
+char jointStateHeaderFrameId[30];
 
 sensor_msgs::Imu imuMsg;           	/*!< ROS IMU message */
 sensor_msgs::MagneticField magMsg;	/*!< ROS Magnetic message*/
 geometry_msgs::Twist velocityMsg;	/*!< ROS velocity message*/
 nav_msgs::Odometry odometryMsg;		/*!< ROS odometry message*/
+sensor_msgs::JointState joint_states;    /*!< ROS joint states message */
+geometry_msgs::TransformStamped odom_tf; /*!< ROS transform stamped message */
+tf::TransformBroadcaster tf_broadcaster; /*!< ROS tf broadcaster message */
+std_msgs::Float32MultiArray wheelVelocityMsg; /*!< ROS left + right wheel velocity (RPM) message */
 
 ros::Subscriber<geometry_msgs::Twist> callbackVelSub(ROS_TOPIC_CALLBACK_VEL, BaseControlCallbackCommandVelocity);
 
 ros::Publisher imuPub(ROS_TOPIC_IMU, &imuMsg);
 ros::Publisher magPub(ROS_TOPIC_MAG, &magMsg);
 ros::Publisher velPub(ROS_TOPIC_VEL, &velocityMsg);
+ros::Publisher odomPub(ROS_TOPIC_ODOM, &odometryMsg);
+ros::Publisher jointStatesPub(ROS_TOPIC_JOINT_STATES, &joint_states);
+ros::Publisher wheelVelPub(ROS_TOPIC_WHEEL_VEL, &wheelVelocityMsg);
+
+char get_prefix[10];
+char *get_tf_prefix = get_prefix;
 
 float goalVelocity[2] = {0.0, 0.0};            	/*!< Velocity to control motor */
 float goalReceiveVelocity[2] = {0.0, 0.0};   	/*!< Velocity receive from "callback_robot_vel" topic */
 float goalMotorVelocity[2] = {0.0, 0.0};		/*!< Velocity of 2 motors */
+
+float odom_pose_x;
+float odom_pose_y;
+float odom_pose_theta;
+float odom_vel_lin;
+float odom_vel_ang;
 
 #if (USE_UART_MATLAB == 1)
 FloatByteArray uartData;
@@ -106,10 +132,29 @@ static uint8_t getLeftParameter = 0;
 static uint8_t getRightParameter = 0;
 #endif
 
+diffDriveHandle_t robot_kinematic_handle = NULL;
 /********** Local function definition section *********************************/
 static ros::Time BaseControlGetROSTime(void)
 {
 	return rosNodeHandle.now();
+}
+
+static float constrain(float x, float low_val, float high_val)
+{
+    float value;
+    if (x > high_val)
+    {
+        value = high_val;
+    }
+    else if (x < low_val)
+    {
+        value = low_val;
+    }
+    else
+    {
+        value = x;
+    }
+    return value;
 }
 
 static uint32_t BaseControlGetElaspedTime(uint32_t *time)
@@ -211,11 +256,105 @@ static void BaseControlCallbackCommandVelocity(const geometry_msgs::Twist &callb
 	goalReceiveVelocity[ANGULAR] = callbackVelMsg.angular.z;
 
 	/* Constrain velocity */
+	goalReceiveVelocity[LINEAR] = constrain(goalReceiveVelocity[LINEAR], MIN_LINEAR_VELOCITY, MAX_LINEAR_VELOCITY);
+	goalReceiveVelocity[ANGULAR] = constrain(goalReceiveVelocity[ANGULAR], MIN_ANGULAR_VELOCITY, MAX_ANGULAR_VELOCITY);
 
 	/* Update control robot time */
 	rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT] = mlsHardwareInfoGetTickMs();
 }
 
+static void BaseControlUpdateOdom(void)
+{
+    mlsDiffDriveGetOdom(robot_kinematic_handle,
+                        &odom_pose_x,
+                        &odom_pose_y,
+                        &odom_pose_theta,
+                        &odom_vel_lin,
+                        &odom_vel_ang);
+
+    odometryMsg.header.frame_id = odomHeaderFrameId;
+    odometryMsg.child_frame_id = odomChildFrameId;
+
+    odometryMsg.pose.pose.position.x = odom_pose_x;
+    odometryMsg.pose.pose.position.y = odom_pose_y;
+    odometryMsg.pose.pose.position.z = 0;
+    odometryMsg.pose.pose.orientation = tf::createQuaternionFromYaw(odom_pose_theta);
+
+    odometryMsg.twist.twist.linear.x = odom_vel_lin;
+    odometryMsg.twist.twist.angular.z = odom_vel_ang;
+}
+
+static void BaseControlUpdateJointState(void)
+{
+    static float joint_states_pos[WHEEL_NUM] = {0.0, 0.0};
+    static float joint_states_vel[WHEEL_NUM] = {0.0, 0.0};
+    mlsDiffDriveGetRad(robot_kinematic_handle, &joint_states_pos[LEFT], &joint_states_pos[RIGHT]);
+    mlsDiffDriveGetVel(robot_kinematic_handle, &joint_states_vel[LEFT], &joint_states_vel[RIGHT]);
+
+    joint_states.position = (double *)joint_states_pos;
+    joint_states.velocity = (double *)joint_states_vel;
+}
+
+static void BaseControlUpdateTf(geometry_msgs::TransformStamped &odom_tf)
+{
+    odom_tf.header = odometryMsg.header;
+    odom_tf.child_frame_id = odometryMsg.child_frame_id;
+    odom_tf.transform.translation.x = odometryMsg.pose.pose.position.x;
+    odom_tf.transform.translation.y = odometryMsg.pose.pose.position.y;
+    odom_tf.transform.translation.z = odometryMsg.pose.pose.position.z;
+    odom_tf.transform.rotation = odometryMsg.pose.pose.orientation;
+}
+
+static void BaseControlInitOdom(void)
+{
+    odom_pose_x = 0;
+    odom_pose_y = 0;
+    odom_pose_theta = 0;
+    odom_vel_lin = 0;
+    odom_vel_ang = 0;
+
+    odometryMsg.pose.pose.position.x = 0.0;
+    odometryMsg.pose.pose.position.y = 0.0;
+    odometryMsg.pose.pose.position.z = 0.0;
+
+    odometryMsg.pose.pose.orientation.x = 0.0;
+    odometryMsg.pose.pose.orientation.y = 0.0;
+    odometryMsg.pose.pose.orientation.z = 0.0;
+    odometryMsg.pose.pose.orientation.w = 0.0;
+
+    odometryMsg.twist.twist.linear.x = 0.0;
+    odometryMsg.twist.twist.angular.z = 0.0;
+}
+
+static void BaseControlInitJointState(void)
+{
+    static char *joint_states_name[] = {(char *)"wheel_left_joint", (char *)"wheel_right_joint"};
+
+    joint_states.header.frame_id = jointStateHeaderFrameId;
+    joint_states.name = joint_states_name;
+
+    joint_states.name_length = WHEEL_NUM;
+    joint_states.position_length = WHEEL_NUM;
+    joint_states.velocity_length = WHEEL_NUM;
+    joint_states.effort_length = WHEEL_NUM;
+}
+
+static bool BaseControlCalcOdom(float stepTime)
+{
+    float theta;
+    float q0, q1, q2, q3;
+
+    mlsPeriphImuGetQuat(&q0, &q1, &q2, &q3);
+    theta = atan2f(q0 * q3 + q1 * q2, 0.5f - q2 * q2 - q3 * q3);
+
+    int32_t leftTick, rightTick;
+
+    mlsPeriphEncoderLeftGetTick(&leftTick);
+    mlsPeriphEncoderRightGetTick(&rightTick);
+
+    mlsDiffDriveCalculateOdom(robot_kinematic_handle, stepTime, leftTick, rightTick, theta);
+    return true;
+}
 /********** Global function definition section ********************************/
 void mlsBaseControlROSSetup(void)
 {
@@ -223,12 +362,35 @@ void mlsBaseControlROSSetup(void)
 
     rosNodeHandle.subscribe(callbackVelSub);	/*!< Subscribe to "callback_robot_vel" topic to get control robot velocity*/
 
-    rosNodeHandle.advertise(imuPub);	/*!< Register the publisher to "imu" topic */
-    rosNodeHandle.advertise(magPub);	/*!< Register the publisher to "mag" topic */
-    rosNodeHandle.advertise(velPub);	/*!< Register the publisher to "robot_vel" topic */
+    rosNodeHandle.advertise(imuPub);			/*!< Register the publisher to "imu" topic */
+    rosNodeHandle.advertise(magPub);			/*!< Register the publisher to "mag" topic */
+    rosNodeHandle.advertise(velPub);			/*!< Register the publisher to "robot_vel" topic */
+    rosNodeHandle.advertise(odomPub);          	/*!< Register the publisher to "odom" topic */
+    rosNodeHandle.advertise(jointStatesPub);  	/*!< Register the publisher to "joint_states" topic */
+    rosNodeHandle.advertise(wheelVelPub);		/*!< Register the publisher to "robot_wheel_vel" topic */
+
+    tf_broadcaster.init(rosNodeHandle); /*!< Init TransformBroadcaster */
+    BaseControlInitOdom();
+    BaseControlInitJointState();
 
     rosPrevUpdateTime[UPDATE_TIME_PID] = mlsHardwareInfoGetTickMs();
     rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT] = mlsHardwareInfoGetTickMs();
+    rosPrevUpdateTime[UPDATE_TIME_PUBLISH_DRIVE] = mlsHardwareInfoGetTickMs();
+}
+
+void mlsBaseControlSetup(void)
+{
+    robot_kinematic_handle = mlsDiffDriveInit();
+    diffDriveCfg_t diff_drive_cfg = {
+        .wheelRadius = WHEEL_RADIUS,
+        .wheelSeperation = WHEEL_SEPARATION,
+        .minLinVel = MIN_LINEAR_VELOCITY,
+        .maxLinVel = MAX_LINEAR_VELOCITY,
+        .minAngVel = MIN_ANGULAR_VELOCITY,
+        .maxAngVel = MAX_ANGULAR_VELOCITY,
+        .tickToRad = TICK2RAD
+    };
+    mlsDiffDriveSetConfig(robot_kinematic_handle, diff_drive_cfg);
 }
 
 void mlsBaseControlSpinOnce(void)
@@ -290,13 +452,32 @@ void mlsBaseControlSendLogMsg(void)
 	}
 }
 
+void mlsBaseControlUpdateVariable(bool isConnected)
+{
+    static bool variable_flag = false;
+
+    if (isConnected)
+    {
+        if (variable_flag == false)
+        {
+            BaseControlInitOdom();
+
+            variable_flag = true;
+        }
+    }
+    else
+    {
+        variable_flag = false;
+    }
+}
+
 void mlsBaseControlPublishImuMsg(void)
 {
 	/* Get IMU data*/
 	imuMsg = BaseControlGetIMU();
 
 	imuMsg.header.stamp = BaseControlGetROSTime();
-//	imuMsg.header.frame_id = imuFrameId;
+	imuMsg.header.frame_id = imuFrameId;
 
 	/* Publish IMU message*/
 	imuPub.publish(&imuMsg);
@@ -305,6 +486,7 @@ void mlsBaseControlPublishImuMsg(void)
 	/* Get Mag data*/
 	magMsg = BaseControlGetMag();
 	magMsg.header.stamp = BaseControlGetROSTime();
+	magMsg.header.frame_id = magFrameId;
 
 	/* Publish Mag message*/
 	magPub.publish(&magMsg);
@@ -333,12 +515,37 @@ void mlsBaseControlPublishMortorVelocityMsg(void)
 
 	/* Publish motor velocity message to "robot_vel" topic*/
 	velPub.publish(&velocityMsg);
+
+	/* Get wheel velocity (RPM) */
+	wheelVelocityMsg.data[LEFT] = goalMotorVelocity[LEFT];
+	wheelVelocityMsg.data[RIGHT] = goalMotorVelocity[RIGHT];
+
+	/* Publish wheel velocity message to "robot_wheel_vel" topic*/
+	wheelVelPub.publish(&wheelVelocityMsg);
 }
 
 void mlsBaseControlPublishDriveInformationMsg(void)
 {
-	odometryMsg.header.stamp = BaseControlGetROSTime();
-//	odometryMsg.header.frame_id = odomFrameId;
+	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PUBLISH_DRIVE]);
+	ros::Time stamp_now = BaseControlGetROSTime();
+
+	/* Calculate odometry */
+	BaseControlCalcOdom((float)(stepTime * 0.001f));
+
+	/* Publish odometry message */
+	BaseControlUpdateOdom();
+	odometryMsg.header.stamp = stamp_now;
+	odomPub.publish(&odometryMsg);
+
+	/* Publish TF message */
+	BaseControlUpdateTf(odom_tf);
+	odom_tf.header.stamp = stamp_now;
+	tf_broadcaster.sendTransform(odom_tf);
+
+	/* Publish jointStates message */
+	BaseControlUpdateJointState();
+	joint_states.header.stamp = stamp_now;
+	jointStatesPub.publish(&joint_states);
 }
 
 void mlsBaseControlUpdateGoalVel(void)
@@ -735,10 +942,14 @@ void mlsBaseControlSetVelocityGoal(void)
 {
 	float rightWheelVelocity = 0.0, leftWheelVelocity = 0.0;
 
+	mlsDiffDriveCalculateWheelVel(robot_kinematic_handle,
+	                              goalVelocity[LINEAR],
+	                              goalVelocity[ANGULAR],
+	                              &leftWheelVelocity,
+	                              &rightWheelVelocity);
 
-
-	mlsPeriphMotorLeftPIDSetSetPoint(leftWheelVelocity);
-	mlsPeriphMotorRightPIDSetSetPoint(rightWheelVelocity);
+	mlsPeriphMotorLeftPIDSetSetPoint(leftWheelVelocity * CONVERT_VELOCITY);
+	mlsPeriphMotorRightPIDSetSetPoint(rightWheelVelocity * CONVERT_VELOCITY);
 }
 
 void mlsBaseControlSetControlValue(void)
@@ -751,6 +962,64 @@ void mlsBaseControlPublishTest(int32_t tick)
 {
 	sprintf(rosLogBuffer, "Right tick: %ld", tick);
 	rosNodeHandle.loginfo(rosLogBuffer);
+}
+
+void mlsBaseControlUpdateTfPrefix(bool isConnected)
+{
+	static bool isChecked = false;
+	char log_msg[60];
+
+	if (isConnected)
+	{
+		if (isChecked == false)
+		{
+			rosNodeHandle.getParam("~tf_prefix", &get_tf_prefix);
+
+			if (!strcmp(get_tf_prefix, ""))
+			{
+				sprintf(odomHeaderFrameId, "odom");
+				sprintf(odomChildFrameId, "base_footprint");
+
+				sprintf(imuFrameId, "imu_link");
+				sprintf(magFrameId, "mag_link");
+				sprintf(jointStateHeaderFrameId, "base_link");
+			}
+			else
+			{
+				strcpy(odomHeaderFrameId, get_tf_prefix);
+				strcpy(odomChildFrameId, get_tf_prefix);
+
+				strcpy(imuFrameId, get_tf_prefix);
+				strcpy(magFrameId, get_tf_prefix);
+				strcpy(jointStateHeaderFrameId, get_tf_prefix);
+
+				strcat(odomHeaderFrameId, "/odom");
+				strcat(odomChildFrameId, "/base_footprint");
+
+				strcat(imuFrameId, "/imu_link");
+				strcat(magFrameId, "/mag_link");
+				strcat(jointStateHeaderFrameId, "/base_link");
+			}
+
+			sprintf(log_msg, "Setup TF on Odometry [%s]", odomHeaderFrameId);
+			rosNodeHandle.loginfo(log_msg);
+
+			sprintf(log_msg, "Setup TF on IMU [%s]", imuFrameId);
+			rosNodeHandle.loginfo(log_msg);
+
+			sprintf(log_msg, "Setup TF on MAG [%s]", magFrameId);
+			rosNodeHandle.loginfo(log_msg);
+
+			sprintf(log_msg, "Setup TF on JointState [%s]", jointStateHeaderFrameId);
+			rosNodeHandle.loginfo(log_msg);
+
+			isChecked = true;
+		}
+	}
+	else
+	{
+		isChecked = false;
+	}
 }
 /********** Class function implementation section *****************************/
 

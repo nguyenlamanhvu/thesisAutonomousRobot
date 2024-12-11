@@ -36,11 +36,13 @@ extern "C"
 /********** Type definition section *******************************************/
 
 /********** Macro definition section*******************************************/
-#define LINEAR	0
-#define ANGULAR	1
+#define WHEEL_NUM       2
 
-#define LEFT	0
-#define RIGHT	1
+#define LINEAR			0
+#define ANGULAR			1
+
+#define LEFT			0
+#define RIGHT			1
 /********** Function declaration section **************************************/
 /*
  * @brief Base Control ROS Setup
@@ -48,6 +50,13 @@ extern "C"
  * @return Error Code
  */
 void mlsBaseControlROSSetup(void);
+
+/*
+ * @brief Base Control Setup
+ * @param None
+ * @return Error Code
+ */
+void mlsBaseControlSetup(void);
 
 /*
  * @brief Base Control Spin Once
@@ -182,6 +191,33 @@ void mlsBaseControlSetVelocityGoal(void);
  */
 void mlsBaseControlSetControlValue(void);
 void mlsBaseControlPublishTest(int32_t tick);
+
+/*
+ * @brief   Re-initialize odometry if rosserial lost communication happened.
+ *
+ * @param   isConnected Check rosserial connect.
+ *
+ * @return  None.
+ */
+void mlsBaseControlUpdateVariable(bool isConnected);
+
+/*
+ * @brief   Re-initialize tf if rosserial lost communication happened.
+ *
+ * @param   isConnected Check rosserial connect.
+ *
+ * @return  None.
+ */
+void mlsBaseControlUpdateTfPrefix(bool isConnected);
+
+/*
+ * @brief   Calculate odometry and publish odometry to ROS.
+ *
+ * @param   None.
+ *
+ * @return  None.
+ */
+void mlsBaseControlPublishDriveInformationMsg(void);
 
 #ifdef __cplusplus
 }

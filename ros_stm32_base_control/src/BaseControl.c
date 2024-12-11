@@ -52,8 +52,10 @@ mlsErrorCode_t mlsBaseControlInit(void)
 	/* Start Timer Interrupt*/
 	errorCode = mlsBaseControlStartTimerInterrupt(&htim6);
 #if (USE_UART_ROS == 1)
-	/* Initialize ROS*/
+	/* Initialize ROS */
 	mlsBaseControlROSSetup();
+	/* Initialize Base Control */
+	mlsBaseControlSetup();
 #elif (USE_UART_MATLAB == 1 || USE_UART_GUI == 1)
 	errorCode = mlsPeriphUartInit();
 #endif
@@ -65,6 +67,12 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	mlsErrorCode_t errorCode = MLS_ERROR;
 
 #if (USE_UART_ROS == 1)
+	/* Update variable */
+	mlsBaseControlUpdateVariable(mlsBaseControlConnectStatus());
+
+	/* Update TF */
+	mlsBaseControlUpdateTfPrefix(mlsBaseControlConnectStatus());
+
 	/* Control motor*/
 	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
 	{
@@ -82,11 +90,19 @@ mlsErrorCode_t mlsBaseControlMain(void)
 		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
 	}
 
-	/* Publish motor velocity data to topic "robot_vel"*/
+	/* Publish motor velocity data to topic "robot_vel", wheel velocity to topic "robot_wheel_vel"*/
 	if(gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] == 1)
 	{
 		mlsBaseControlPublishMortorVelocityMsg();
 		gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] = 0;
+	}
+
+	/* Publish driver information */
+	if(gBaseControlTimeUpdateFlag[DRIVE_INFORMATION_TIME_INDEX] == 1)
+	{
+		/* Publish Odom, TF and JointState, */
+		mlsBaseControlPublishDriveInformationMsg();
+		gBaseControlTimeUpdateFlag[DRIVE_INFORMATION_TIME_INDEX] = 0;
 	}
 
 	/* Update IMU */
