@@ -133,7 +133,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 	if(huart->Instance == huart2.Instance){
 		//Get data from buffer
 		memcpy(&gGuiRxDataFrame, gBufferRxData, UART_MAX_LENGTH);
-		if((gGuiRxDataFrame.header == 0x0A) && (gGuiRxDataFrame.length == (uint8_t)(Size - 4)) && (gGuiRxDataFrame.footer == 0x05))
+		if((gGuiRxDataFrame.header == 0x0A) && (gGuiRxDataFrame.length == sizeof(gGuiRxDataFrame) - 4) && (gGuiRxDataFrame.footer == 0x05))
 		{
 			memcpy(&gGuiTxDataFrame, &gGuiRxDataFrame, sizeof(gGuiRxDataFrame));
 			gGuiTxDataFrame.footer = 0x06;

@@ -72,6 +72,7 @@ extern dataFrame_t gGuiTxDataFrame;
 
 uint8_t rightMotorRun = 0;
 uint8_t leftMotorRun = 0;
+extern int32_t rightTick;
 /********** Local (static) function declaration section ***********************/
 static sensor_msgs::Imu BaseControlGetIMU(void);
 static sensor_msgs::MagneticField BaseControlGetMag(void);
@@ -821,16 +822,16 @@ void mlsBaseControlCalculatePID(void)
 	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
 	/* Get tick from encoder */
 	mlsPeriphEncoderLeftGetTick(&leftTick);
-//	mlsPeriphEncoderRightGetTick(&rightTick);
+	mlsPeriphEncoderRightGetTick(&rightTick);
 	/* Calculate linear velocity of 2 motors*/
 	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &goalMotorVelocity[LEFT]);
-//	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &goalMotorVelocity[RIGHT]);
+	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &goalMotorVelocity[RIGHT]);
 	/* Update real value to PID controller */
 	mlsPeriphMotorLeftPIDUpdateRealValue(goalMotorVelocity[LEFT]);
-//	mlsPeriphMotorRightPIDUpdateRealValue(goalMotorVelocity[RIGHT]);
+	mlsPeriphMotorRightPIDUpdateRealValue(goalMotorVelocity[RIGHT]);
 	/* Calculate PID */
 	mlsPeriphMotorLeftPIDCalculate(stepTime);
-//	mlsPeriphMotorRightPIDCalculate(stepTime);
+	mlsPeriphMotorRightPIDCalculate(stepTime);
 }
 
 uint32_t mlsBaseControlGetControlVelocityTime(void)
@@ -876,33 +877,38 @@ void mlsBaseControlCalculateFuzzy(void)
 	mlsPeriphMotorLeftFuzzyCalculate(stepTime);
 }
 volatile  double sweap=0;
-float leftVel;
+float Vel;
 volatile double_t k=0;
 uint8_t DataToSend[8];
 int8_t i=0;
+
 void mlsBaseControlCalculatePIDParameter(void)
 {
 	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_FUZZY]);
 	sweap = 99.0*sin(2 *pi * 0.1 * 40 * (pow(50, (k) / (200.0 * 40)) - 1) / log(50.0));
 	uartData.floatValue = sweap;
 	k=k+1;
-  	if(k == 4001)
+  	if(k >= 8001)
   	{
-  		mlsPeriphMotorLeftSetSpeed(0);
+//  		mlsPeriphMotorLeftSetSpeed(0);
+  		mlsPeriphMotorRightSetSpeed(0);
   	}
   	else
   	{
-  	  	mlsPeriphMotorLeftSetSpeed(sweap);
+//  	  	mlsPeriphMotorLeftSetSpeed(sweap);
+  	  	mlsPeriphMotorRightSetSpeed(sweap);
   	//  	errorCode = mlsPeriphUartSend(uartData.byteArray);
   	  	for(i = 0; i < 4; i++) {
   			DataToSend[i] = uartData.byteArray[i];
   		}
 
-  	  	int32_t leftTick;
+//  	  	int32_t leftTick;
 
-  	  	mlsPeriphEncoderLeftGetTick(&leftTick);
-  	  	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &leftVel);
-  	  	uartData.floatValue = leftVel;
+//  	  	mlsPeriphEncoderLeftGetTick(&leftTick);
+  	  mlsPeriphEncoderRightGetTick(&rightTick);
+//  	  	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &Vel);
+  	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &Vel);
+  	  	uartData.floatValue = Vel;
   	  	for(i = 0; i < 4; i++) {
   			DataToSend[i+4] = uartData.byteArray[i];
   		}

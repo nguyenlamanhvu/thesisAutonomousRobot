@@ -66,57 +66,61 @@ mlsErrorCode_t mlsBaseControlInit(void)
 #endif
 	return errorCode;
 }
-int32_t leftTick;
+int32_t rightTick;
+extern float Vel;
 mlsErrorCode_t mlsBaseControlMain(void)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
+//	HAL_Delay(100);
+//	mlsPeriphEncoderRightGetTick(&rightTick);
+//	mlsPeriphMotorRightCalculateVelocity(rightTick, 100, &Vel);
 #if (USE_UART_ROS == 1)
-	/* Control motor*/
-	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
-	{
-		mlsBaseControlUpdateGoalVel();
-		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
-		{
-			mlsBaseControlSetVelocityZero();
-		}
-		else
-		{
-			mlsBaseControlSetVelocityGoal();
-		}
-		mlsBaseControlCalculatePID();
-		mlsBaseControlSetControlValue();
-		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
-	}
-
-	/* Publish motor velocity data to topic "robot_vel"*/
-	if(gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] == 1)
-	{
-		mlsBaseControlPublishMortorVelocityMsg();
-		gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] = 0;
-	}
-
-	/* Update IMU */
-	if(gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] == 1)
-	{
-		mlsBaseControlUpdateImu();
-		gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] = 0;
-	}
-
-	/* Publish IMU data to topic "imu"*/
-	if(gBaseControlTimeUpdateFlag[IMU_PUBLISH_TIME_INDEX] == 1)
-	{
-		mlsBaseControlPublishImuMsg();
-		gBaseControlTimeUpdateFlag[IMU_PUBLISH_TIME_INDEX] = 0;
-	}
-
-	/* Send log message*/
-	mlsBaseControlSendLogMsg();
-
-	/* Spin NodeHandle to keep synchorus */
-	mlsBaseControlSpinOnce();
-
-	/* Keep rosserial connection */
-	mlsBaseControlWaitSerialLink(mlsBaseControlConnectStatus());
+//	/* Control motor*/
+//	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
+//	{
+//		mlsBaseControlUpdateGoalVel();
+//		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
+//		{
+//			mlsBaseControlSetVelocityZero();
+//		}
+//		else
+//		{
+//			mlsBaseControlSetVelocityGoal();
+//		}
+//		mlsBaseControlCalculatePID();
+//		mlsBaseControlSetControlValue();
+//		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
+//	}
+//
+//	/* Publish motor velocity data to topic "robot_vel"*/
+//	if(gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] == 1)
+//	{
+//		mlsBaseControlPublishMortorVelocityMsg();
+//		gBaseControlTimeUpdateFlag[VEL_PUBLISH_TIME_INDEX] = 0;
+//	}
+//
+//	/* Update IMU */
+//	if(gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] == 1)
+//	{
+//		mlsBaseControlUpdateImu();
+//		gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] = 0;
+//	}
+//
+//	/* Publish IMU data to topic "imu"*/
+//	if(gBaseControlTimeUpdateFlag[IMU_PUBLISH_TIME_INDEX] == 1)
+//	{
+//		mlsBaseControlPublishImuMsg();
+//		gBaseControlTimeUpdateFlag[IMU_PUBLISH_TIME_INDEX] = 0;
+//	}
+//
+//	/* Send log message*/
+//	mlsBaseControlSendLogMsg();
+//
+//	/* Spin NodeHandle to keep synchorus */
+//	mlsBaseControlSpinOnce();
+//
+//	/* Keep rosserial connection */
+//	mlsBaseControlWaitSerialLink(mlsBaseControlConnectStatus());
 
 	errorCode = MLS_SUCCESS;
 
