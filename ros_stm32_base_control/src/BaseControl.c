@@ -43,8 +43,8 @@ mlsErrorCode_t mlsBaseControlInit(void)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
 	/* Initialize peripherals */
-	errorCode = mlsPeriphImuInit();
-	errorCode = mlsPeriphImuFilterInit();
+//	errorCode = mlsPeriphImuInit();
+//	errorCode = mlsPeriphImuFilterInit();
 	errorCode = mlsPeriphMotorInit();
 	errorCode = mlsPeriphEncoderInit();
 	errorCode = mlsPeriphMotorPIDInit();

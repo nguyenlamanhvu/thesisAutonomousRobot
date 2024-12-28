@@ -52,9 +52,9 @@
 #define MOTOR_LEFT_KI		7.98301209873064
 #define MOTOR_LEFT_KD		0.00000239133617
 
-#define MOTOR_RIGHT_KP		0
-#define MOTOR_RIGHT_KI		0
-#define MOTOR_RIGHT_KD		0
+#define MOTOR_RIGHT_KP		0.732191899995779
+#define MOTOR_RIGHT_KI		7.38303955903139
+#define MOTOR_RIGHT_KD		0.00736326666575839
 /********** Local (static) variable definition ********************************/
 motorHandle_t motorLeftHandle = NULL;
 motorHandle_t motorRightHandle = NULL;
@@ -494,6 +494,10 @@ mlsErrorCode_t mlsPeriphMotorPIDInit(void)
 	{
 		return errorCode;
 	}
+
+	HAL_Delay(10000);
+	mlsMotorPIDSetSetPoint(motorLeftPIDHandle, 50);
+	mlsMotorPIDSetSetPoint(motorRightPIDHandle, 50);
 
 	return MLS_SUCCESS;
 }

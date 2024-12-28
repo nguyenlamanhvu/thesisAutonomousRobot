@@ -866,41 +866,6 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 
 	return MLS_SUCCESS;
 }
-
-volatile  double sweap=0;
-float leftVel;
-volatile double_t k=0;
-uint8_t DataToSend[8];
-int8_t i=0;
-void mlsBaseControlCalculatePIDParameter(void)
-{
-	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_FUZZY]);
-	sweap = 99.0*sin(2 *pi * 0.1 * 40 * (pow(50, (k) / (200.0 * 40)) - 1) / log(50.0));
-	uartData.floatValue = sweap;
-	k=k+1;
-  	if(k == 4001)
-  	{
-  		mlsPeriphMotorLeftSetSpeed(0);
-  	}
-  	else
-  	{
-  	  	mlsPeriphMotorLeftSetSpeed(sweap);
-  	//  	errorCode = mlsPeriphUartSend(uartData.byteArray);
-  	  	for(i = 0; i < 4; i++) {
-  			DataToSend[i] = uartData.byteArray[i];
-  		}
-
-  	  	int32_t leftTick;
-
-  	  	mlsPeriphEncoderLeftGetTick(&leftTick);
-  	  	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &leftVel);
-  	  	uartData.floatValue = leftVel;
-  	  	for(i = 0; i < 4; i++) {
-  			DataToSend[i+4] = uartData.byteArray[i];
-  		}
-  	  	HAL_UART_Transmit(&huart2, DataToSend, 8,100);
-  	}
-}
 #endif
 
 mlsErrorCode_t mlsBaseControlUpdateImu(void)
