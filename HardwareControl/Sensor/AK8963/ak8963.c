@@ -116,25 +116,31 @@ mlsErrorCode_t mlsAk8963Config(ak8963Handle_t handle)
 	handle->i2cWrite(AK8963_CNTL1, &buffer, 1);
 	mlsHardwareInfoDelay(10);
 
-	/* Power down AK8963 magnetic sensor */
-	buffer = 0x00;
-	handle->i2cWrite(AK8963_CNTL1, &buffer, 1);
-	mlsHardwareInfoDelay(10);
+//	/* Power down AK8963 magnetic sensor */
+//	buffer = 0x00;
+//	handle->i2cWrite(AK8963_CNTL1, &buffer, 1);
+//	mlsHardwareInfoDelay(10);
 
 	/* Read magnetic sensitivity adjustment */
 	uint8_t magRawData[3];
 	handle->i2cRead(AK8963_ASAX, magRawData, 3);
 
 	/* Update magnetometer sensitive adjust */
-	handle->magSensAdjX = (float)(magRawData[0] - 128) / 256.0f + 1.0f;
-	handle->magSensAdjY = (float)(magRawData[1] - 128) / 256.0f + 1.0f;
-	handle->magSensAdjZ = (float)(magRawData[2] - 128) / 256.0f + 1.0f;
+//	handle->magSensAdjX = ((float)(magRawData[0] - 128) / 256.0f + 1.0f);
+//	handle->magSensAdjY = ((float)(magRawData[1] - 128) / 256.0f + 1.0f);
+//	handle->magSensAdjZ = ((float)(magRawData[2] - 128) / 256.0f + 1.0f);
+	handle->magSensAdjX = ((float)(magRawData[0] - 128) / 256.0f + 1.0f) * 0.15f;
+	handle->magSensAdjY = ((float)(magRawData[1] - 128) / 256.0f + 1.0f) * 0.15f;
+	handle->magSensAdjZ = ((float)(magRawData[2] - 128) / 256.0f + 1.0f) * 0.15f;
 
 	/* Power down AK8963 magnetic sensor */
 	buffer = 0x00;
 	handle->i2cWrite(AK8963_CNTL1, &buffer, 1);
 	mlsHardwareInfoDelay(10);
 
+    // Configure the magnetometer for continuous read and highest resolution
+    // set Mscale bit 4 to 1 (0) to enable 16 (14) bit resolution in CNTL register,
+    // and enable continuous mode data acquisition MAG_MODE (bits [3:0]), 0010 for 8 Hz and 0110 for 100 Hz sample rates
 	/* Configure magnetic operation mode and range */
 	buffer = 0x00;
 	buffer = handle->oprerationMode & 0x0F;
@@ -330,9 +336,9 @@ mlsErrorCode_t mlsAk8963Calib3Axis(ak8963Handle_t handle)
 	// Get soft iron correction estimate
 	float scaleTemp[3];
 
-	scaleTemp[0] = (magMax[0] - magMin[0]) / 2;
-	scaleTemp[1] = (magMax[1] - magMin[1]) / 2;
-	scaleTemp[2] = (magMax[2] - magMin[2]) / 2;
+	scaleTemp[0] = (magMax[0] - magMin[0]) * handle->magSensAdjX / 2;
+	scaleTemp[1] = (magMax[1] - magMin[1]) * handle->magSensAdjY / 2;
+	scaleTemp[2] = (magMax[2] - magMin[2]) * handle->magSensAdjZ / 2;
 
 	float magScaleAvg = (scaleTemp[0] + scaleTemp[1] + scaleTemp[2]) / 3.0f;
 

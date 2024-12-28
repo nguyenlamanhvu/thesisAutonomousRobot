@@ -169,7 +169,7 @@ mlsErrorCode_t mlsPeriphImuFilterInit(void);
  *      - MLS_SUCCESS: 		Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphImuUpdateQuat(void);
+mlsErrorCode_t mlsPeriphImuUpdateQuat(float deltaT);
 
 /*
  * @brief   Get quaternion data.

@@ -128,8 +128,6 @@ mlsErrorCode_t mlsMpu9250SetConfig(mpu9250Handle_t handle, mpu9250Config_t confi
 	handle->gyroBias.zAxis = config.gyroBias.zAxis;
 	handle->i2cWrite = config.i2cWrite;
 	handle->i2cRead = config.i2cRead;
-	handle->accelScalingFactor = accelScalingFactor;
-	handle->gyroScalingFactor = gyroScalingFactor;
 
 	return MLS_SUCCESS;
 }
@@ -143,36 +141,60 @@ mlsErrorCode_t mlsMpu9250Config(mpu9250Handle_t handle)
 	}
 	/* Reset mpu9250 */
 	uint8_t buffer = 0;
-	buffer = 0x80;
+	buffer = 0x80;											// Write a one to bit 7 reset bit; toggle reset device
 	handle->i2cWrite(MPU9250_PWR_MGMT_1, &buffer, 1);
 	mlsHardwareInfoDelay(100);
 
-	/* Configure clock source and sleep mode */
+	/* Wake up mpu9250 */
+	buffer = (handle->sleepMode << 6) & 0x40;				// Clear sleep mode bit (6), enable all sensors
+	handle->i2cWrite(MPU9250_PWR_MGMT_1, &buffer, 1);
+	mlsHardwareInfoDelay(100);								// Wait for all registers to reset
+
+	/* Configure clock source */
 	buffer = 0;
 	buffer = handle->clkSel & 0x07;
-	buffer |= (handle->sleepMode << 6) & 0x40;
 	handle->i2cWrite(MPU9250_PWR_MGMT_1, &buffer, 1);
-	mlsHardwareInfoDelay(100);
+	mlsHardwareInfoDelay(200);
 
 	/* Configure digital low pass filter */
 	buffer = 0;
 	buffer = handle->dlpfConfig & 0x07;
 	handle->i2cWrite(MPU9250_CONFIG, &buffer, 1);
 
+	/* Configure sample rate divider */
+	buffer = 0;
+	buffer = 0x04;											// Set sample rate = gyroscope output rate/(1 + SMPLRT_DIV)
+	handle->i2cWrite(MPU9250_SMPRT_DIV, &buffer, 1);		// Use a 200 Hz rate; a rate consistent with the filter update rate
+
 	/* Configure gyroscope range */
 	buffer = 0;
-	buffer = (handle->fsSel << 3) & 0x18;
+	handle->i2cRead(MPU9250_GYRO_CONFIG, &buffer, 1);		// get current GYRO_CONFIG register value
+	buffer = buffer & ~0xE0;                                // Clear self-test bits [7:5]
+	buffer = buffer & ~0x03;                                // Clear Fchoice bits [1:0]
+	buffer = buffer & ~0x18;                                // Clear GYRO_FS_SEL bits [4:3]
+	buffer = buffer | ((uint8_t)(handle->fsSel) << 3);       	// Set full scale range for the gyro
+	buffer = buffer | ((uint8_t)(~(0x03)) & 0x03);   			// Set Fchoice for the gyro
+//	buffer = (handle->fsSel << 3) & 0x18;
 	handle->i2cWrite(MPU9250_GYRO_CONFIG, &buffer, 1);
 
 	/* Configure accelerometer range */
 	buffer = 0;
-	buffer = (handle->afsSel << 3) & 0x18;
+	handle->i2cRead(MPU9250_ACCEL_CONFIG, &buffer, 1);		// get current ACCEL_CONFIG register value
+	buffer = buffer & ~0xE0;                                // Clear self-test bits [7:5]
+    buffer = buffer & ~0x18;                                // Clear ACCEL_FS_SEL bits [4:3]
+    buffer = buffer | ((uint8_t)(handle->afsSel) << 3);  		// Set full scale range for the accelerometer
+//	buffer = (handle->afsSel << 3) & 0x18;
 	handle->i2cWrite(MPU9250_ACCEL_CONFIG, &buffer, 1);
 
-	/* Configure sample rate divider */
+    // Set accelerometer sample rate configuration
+    // It is possible to get a 4 kHz sample rate from the accelerometer by choosing 1 for
+    // accel_fchoice_b bit [3]; in this case the bandwidth is 1.13 kHz
 	buffer = 0;
-	buffer = 0x04;
-	handle->i2cWrite(MPU9250_SMPRT_DIV, &buffer, 1);
+	handle->i2cRead(MPU9250_ACCEL_CONFIG2, &buffer, 1);			// get current ACCEL_CONFIG2 register value
+	buffer = buffer & ~0x0F;                                    // Clear accel_fchoice_b (bit 3) and A_DLPFG (bits [2:0])
+	buffer = buffer | (~(0x01 << 3) & 0x08);    				// Set accel_fchoice_b to 1
+	buffer = buffer | ((uint8_t)(handle->dlpfConfig) & 0x07);  	// Set accelerometer rate to 1 kHz and bandwidth to 41 Hz
+	handle->i2cWrite(MPU9250_ACCEL_CONFIG2, &buffer, 1);
 
 	/* Configure interrupt and enable bypass.
 	 * Set Interrupt pin active high, push-pull, Clear and read of INT_STATUS,
@@ -183,6 +205,7 @@ mlsErrorCode_t mlsMpu9250Config(mpu9250Handle_t handle)
 	handle->i2cWrite(MPU9250_INT_PIN_CFG, &buffer, 1);
 	buffer = 0x01;
 	handle->i2cWrite(MPU9250_INT_ENABLE, &buffer, 1);
+	mlsHardwareInfoDelay(100);
 
 	return MLS_SUCCESS;
 }
@@ -389,10 +412,19 @@ mlsErrorCode_t mlsMpu9250Calib6Axis(mpu9250Handle_t handle)
 
 	handle->accelBias.xAxis = meanAx;
 	handle->accelBias.yAxis = meanAy;
-	handle->accelBias.zAxis = meanAz - (1.0f / handle->accelScalingFactor);
+	handle->accelBias.zAxis = meanAz;
 	handle->gyroBias.xAxis = meanGx;
 	handle->gyroBias.yAxis = meanGy;
 	handle->gyroBias.zAxis = meanGz;
+
+	if(handle->accelBias.zAxis > 0L)
+	{
+		handle->accelBias.zAxis -= (1.0f / handle->accelScalingFactor);
+	}
+	else
+	{
+		handle->accelBias.zAxis += (1.0f / handle->accelScalingFactor);
+	}
 
 	return MLS_SUCCESS;
 }

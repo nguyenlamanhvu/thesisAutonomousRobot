@@ -43,7 +43,7 @@ extern "C"
 
 /* Frequency of publish/subscribe */
 #define IMU_PUBLISH_FREQUENCY				20		/* Frequency in Hz to publish IMU information*/
-#define IMU_UPDATE_FREQUENCY				400		/* Frequency in Hz to update IMU information*/
+#define IMU_UPDATE_FREQUENCY				200		/* Frequency in Hz to update IMU information*/
 #define IMU_FILTER_FREQUENCY				1000	/* Frequency in Hz to calculate filter*/
 #define CONTROL_MOTOR_FREQUENCY				60		/* Frequency in Hz to control DC motor*/
 #define VEL_PUBLISH_FREQUENCY				10		/* Frequency in Hz to publish velocity*/

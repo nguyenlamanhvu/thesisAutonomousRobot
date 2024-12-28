@@ -120,7 +120,7 @@ mlsErrorCode_t mlsImuMadgwickGetQuaternion(imuMadgwickHandle_t handle, float *q0
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az)
+mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az, float deltaT)
 {
 	/* Check input conditions */
 	if(handle == NULL)
@@ -133,11 +133,15 @@ mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, fl
 	float q2 = handle->q2;
 	float q3 = handle->q3;
 	float beta = handle->beta;
-	float sampleFreq = handle->sampleFreq;
 	float recipNorm;
 	float s0, s1, s2, s3;
 	float qDot1, qDot2, qDot3, qDot4;
 	float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2 , _8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
+
+	// Convert gyroscope degrees/sec to radians/sec
+	gx *= 0.0174533f;
+	gy *= 0.0174533f;
+	gz *= 0.0174533f;
 
 	// Rate of change of quaternion from gyroscope
 	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
@@ -188,10 +192,10 @@ mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, fl
 	}
 
 	// Integrate rate of change of quaternion to yield quaternion
-	q0 += qDot1 * (1.0f / sampleFreq);
-	q1 += qDot2 * (1.0f / sampleFreq);
-	q2 += qDot3 * (1.0f / sampleFreq);
-	q3 += qDot4 * (1.0f / sampleFreq);
+	q0 += qDot1 * deltaT;
+	q1 += qDot2 * deltaT;
+	q2 += qDot3 * deltaT;
+	q3 += qDot4 * deltaT;
 
 	// Normalise quaternion
 	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
@@ -208,7 +212,7 @@ mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, fl
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float deltaT)
 {
 	/* Check input conditions */
 	if(handle == NULL)
@@ -220,7 +224,6 @@ mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, fl
 	float q2 = handle->q2;
 	float q3 = handle->q3;
 	float beta = handle->beta;
-	float sampleFreq = handle->sampleFreq;
 	float recipNorm;
 	float s0, s1, s2, s3;
 	float qDot1, qDot2, qDot3, qDot4;
@@ -229,8 +232,13 @@ mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, fl
 
 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
 	if((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
-		return mlsImuMadgwickUpdate6Dof(handle, gx, gy, gz, ax, ay, az);
+		return mlsImuMadgwickUpdate6Dof(handle, gx, gy, gz, ax, ay, az, deltaT);
 	}
+
+	// Convert gyroscope degrees/sec to radians/sec
+	gx *= 0.0174533f;
+	gy *= 0.0174533f;
+	gz *= 0.0174533f;
 
 	// Rate of change of quaternion from gyroscope
 	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
@@ -302,10 +310,10 @@ mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, fl
 	}
 
 	// Integrate rate of change of quaternion to yield quaternion
-	q0 += qDot1 * (1.0f / sampleFreq);
-	q1 += qDot2 * (1.0f / sampleFreq);
-	q2 += qDot3 * (1.0f / sampleFreq);
-	q3 += qDot4 * (1.0f / sampleFreq);
+	q0 += qDot1 * deltaT;
+	q1 += qDot2 * deltaT;
+	q2 += qDot3 * deltaT;
+	q3 += qDot4 * deltaT;
 
 	// Normalise quaternion
 	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);

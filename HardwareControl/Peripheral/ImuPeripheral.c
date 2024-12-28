@@ -96,10 +96,10 @@ mlsErrorCode_t mlsPeriphImuInit(void)
 
 	mpu9250Config_t mpu9250Config = {
 		.clkSel = MPU9250_CLKSEL_AUTO,
-		.dlpfConfig = MPU9250_250ACEL_4000GYRO_BW_HZ,
+		.dlpfConfig = MPU9250_41ACEL_42GYRO_BW_HZ,
 		.sleepMode = MPU9250_DISABLE_SLEEP_MODE,
 		.fsSel = MPU9250_FS_SEL_2000,
-		.afsSel = MPU9250_AFS_SEL_2G,
+		.afsSel = MPU9250_AFS_SEL_16G,
 		.accelBias = {
 			.xAxis = DEFAULT_ACCEL_BIAS_X,
 			.yAxis = DEFAULT_ACCEL_BIAS_Y,
@@ -145,7 +145,7 @@ mlsErrorCode_t mlsPeriphImuInit(void)
 	}
 
 	ak8963Config_t ak8963Config = {
-		.oprerationMode = AK8963_MODE_CONT_MEASUREMENT_1,
+		.oprerationMode = AK8963_MODE_CONT_MEASUREMENT_2,
 		.mfsSel = AK8963_MFS_16BIT,
 		.magHardIronBiasX = DEFAULT_MAG_HARD_IRON_X,
 		.magHardIronBiasY = DEFAULT_MAG_HARD_IRON_Y,
@@ -255,39 +255,53 @@ mlsErrorCode_t mlsPeriphImuGetMag(float *magX, float *magY, float *magZ)
 mlsErrorCode_t mlsPeriphImuGet9Axis(void)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
-	errorCode = mlsPeriphImuGetAccel(&imuDataMpu.mpuAccelX, &imuDataMpu.mpuAccelY, &imuDataMpu.mpuAccelZ);
+	// Accel and Gyro direction is Right-Hand, X-Forward, Z-Up
+	// Magneto direction is Right-Hand, Y-Forward, Z-Down
+	float accelX, accelY, accelZ;
+	errorCode = mlsPeriphImuGetAccel(&accelX, &accelY, &accelZ);
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
 	}
+	imuDataMpu.mpuAccelX = +accelX;
+	imuDataMpu.mpuAccelY = +accelY;
+	imuDataMpu.mpuAccelZ = -accelZ;
 
-	errorCode = mlsPeriphImuGetGyro(&imuDataMpu.mpuGyroX, &imuDataMpu.mpuGyroY, &imuDataMpu.mpuGyroZ);
+	float gyroX, gyroY, gyroZ;
+	errorCode = mlsPeriphImuGetGyro(&gyroX, &gyroY, &gyroZ);
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
 	}
+	imuDataMpu.mpuGyroX = -gyroX;
+	imuDataMpu.mpuGyroY = -gyroY;
+	imuDataMpu.mpuGyroZ = +gyroZ;
 
-	errorCode = mlsPeriphImuGetMag(&imuDataMpu.mpuMagX, &imuDataMpu.mpuMagY, &imuDataMpu.mpuMagZ);
+	float magX, magY, magZ;
+	errorCode = mlsPeriphImuGetMag(&magX, &magY, &magZ);
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
 	}
+	imuDataMpu.mpuMagX = -magY;
+	imuDataMpu.mpuMagY = -magX;
+	imuDataMpu.mpuMagZ = -magZ;
 
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsPeriphImuUpdateQuat(void)
+mlsErrorCode_t mlsPeriphImuUpdateQuat(float deltaT)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
 	if (imuMadgwickHandle == NULL)
 	{
 		return MLS_ERROR_NULL_PTR;
 	}
-//	errorCode = mlsImuMadgwickUpdate6Dof(imuMadgwickHandle, gyroX, gyroY, gyroZ, accelX, accelY, accelZ);
+//	errorCode = mlsImuMadgwickUpdate6Dof(imuMadgwickHandle, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, deltaT);
 	errorCode = mlsImuMadgwickUpdate9Dof(imuMadgwickHandle,
 			imuDataMpu.mpuGyroX, imuDataMpu.mpuGyroY, imuDataMpu.mpuGyroZ,
 			imuDataMpu.mpuAccelX, imuDataMpu.mpuAccelY, imuDataMpu.mpuAccelZ,
-			imuDataMpu.mpuMagX, imuDataMpu.mpuMagY, imuDataMpu.mpuMagZ);
+			imuDataMpu.mpuMagX, imuDataMpu.mpuMagY, imuDataMpu.mpuMagZ, deltaT);
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
