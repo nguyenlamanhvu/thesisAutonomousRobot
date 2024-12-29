@@ -60,7 +60,7 @@ typedef struct {
 #endif
 
 #ifdef USE_MADGWICK_FILTER
-#define DEFAULT_MADGWICK_BETA  				0.25f
+#define DEFAULT_MADGWICK_BETA  				0.12f
 #define DEFAULT_MADGWICK_SAMPLE_FREQ  		IMU_FILTER_FREQUENCY
 #endif
 /********** Local (static) variable definition ********************************/

@@ -319,7 +319,7 @@ void mlsBaseControlPublishImuMsg(void)
 	float roll, pitch, yaw;
 
 	mlsPeriphImuGetQuat(&q0, &q1, &q2, &q3);
-	float a12, a22, a31, a32, a33;  // rotation matrix coefficients for Euler angles and gravity components
+//	float a12, a22, a31, a32, a33;  // rotation matrix coefficients for Euler angles and gravity components
 //    a12 = 2.0f * (q0 * q1 + q2 * q3);
 //    a22 = q3 * q3 + q0 * q0 - q1 * q1 - q2 * q2;
 //    a31 = 2.0f * (q3 * q0 + q1 * q2);

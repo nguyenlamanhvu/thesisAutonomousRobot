@@ -296,9 +296,9 @@ mlsErrorCode_t mlsAk8963Calib3Axis(ak8963Handle_t handle)
 
 	/* 15 seconds for calib magnetometer*/
 	if(handle->oprerationMode == AK8963_MODE_CONT_MEASUREMENT_1)
-		sampleCount = 110;
+		sampleCount = 128;
 	else if(handle->oprerationMode == AK8963_MODE_CONT_MEASUREMENT_2)
-		sampleCount = 1400;
+		sampleCount = 1500;
 
 	for(i = 0; i < sampleCount + 100; i++)			/*!< Dismiss 100 first value */
 	{
