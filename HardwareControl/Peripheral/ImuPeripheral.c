@@ -25,7 +25,17 @@
 /********** Local Constant and compile switch definition section **************/
 
 /********** Local Type definition section *************************************/
-
+typedef struct {
+	float 	mpuAccelX;
+	float	mpuAccelY;
+	float	mpuAccelZ;
+	float 	mpuGyroX;
+	float	mpuGyroY;
+	float	mpuGyroZ;
+	float 	mpuMagX;
+	float	mpuMagY;
+	float	mpuMagZ;
+}imuData_t;
 /********** Local Macro definition section ************************************/
 #ifdef USE_ACC_GYRO_MPU9250
 
@@ -50,10 +60,12 @@
 #endif
 
 #ifdef USE_MADGWICK_FILTER
-#define DEFAULT_MADGWICK_BETA  				0.3f
-#define DEFAULT_MADGWICK_SAMPLE_FREQ  		200.0f
+#define DEFAULT_MADGWICK_BETA  				0.12f
+#define DEFAULT_MADGWICK_SAMPLE_FREQ  		IMU_FILTER_FREQUENCY
 #endif
 /********** Local (static) variable definition ********************************/
+imuData_t	imuDataMpu;
+
 #ifdef USE_ACC_GYRO_MPU9250
 mpu9250Handle_t mpu9250Handle = NULL;
 
@@ -84,10 +96,10 @@ mlsErrorCode_t mlsPeriphImuInit(void)
 
 	mpu9250Config_t mpu9250Config = {
 		.clkSel = MPU9250_CLKSEL_AUTO,
-		.dlpfConfig = MPU9250_250ACEL_4000GYRO_BW_HZ,
+		.dlpfConfig = MPU9250_41ACEL_42GYRO_BW_HZ,
 		.sleepMode = MPU9250_DISABLE_SLEEP_MODE,
 		.fsSel = MPU9250_FS_SEL_2000,
-		.afsSel = MPU9250_AFS_SEL_2G,
+		.afsSel = MPU9250_AFS_SEL_16G,
 		.accelBias = {
 			.xAxis = DEFAULT_ACCEL_BIAS_X,
 			.yAxis = DEFAULT_ACCEL_BIAS_Y,
@@ -168,6 +180,7 @@ mlsErrorCode_t mlsPeriphImuInit(void)
 #elif USE_IMU_ADIS16488
 
 #endif
+	return MLS_SUCCESS;
 }
 
 mlsErrorCode_t mlsPeriphImuFilterInit(void)
@@ -196,7 +209,12 @@ mlsErrorCode_t mlsPeriphImuFilterInit(void)
 mlsErrorCode_t mlsPeriphImuGetAccel(float *accelX, float *accelY, float *accelZ)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
+
 #ifdef USE_ACC_GYRO_MPU9250
+	if (mpu9250Handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
 	errorCode = mlsMpu9250GetAccelScale(mpu9250Handle, accelX, accelY, accelZ);
 #elif USE_IMU_ADIS16488
 
@@ -208,6 +226,10 @@ mlsErrorCode_t mlsPeriphImuGetGyro(float *gyroX, float *gyroY, float *gyroZ)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
 #ifdef USE_ACC_GYRO_MPU9250
+	if (mpu9250Handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
 	errorCode = mlsMpu9250GetGyroScale(mpu9250Handle, gyroX, gyroY, gyroZ);
 #elif USE_IMU_ADIS16488
 
@@ -219,6 +241,10 @@ mlsErrorCode_t mlsPeriphImuGetMag(float *magX, float *magY, float *magZ)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
 #if defined(USE_ACC_GYRO_MPU9250) && defined(USE_MAGNETOMETER_MPU9250)
+	if (ak8963Handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
 	errorCode = mlsAk8963GetMagScale(ak8963Handle, magX, magY, magZ);
 #elif USE_IMU_ADIS16488
 
@@ -226,43 +252,62 @@ mlsErrorCode_t mlsPeriphImuGetMag(float *magX, float *magY, float *magZ)
 	return errorCode;
 }
 
-mlsErrorCode_t mlsPeriphImuUpdateQuat(void)
+mlsErrorCode_t mlsPeriphImuGet9Axis(void)
 {
 	mlsErrorCode_t errorCode = MLS_ERROR;
-	if ((mpu9250Handle == NULL) || (imuMadgwickHandle == NULL))
+	// Accel and Gyro direction is Right-Hand, X-Forward, Z-Up
+	// Magneto direction is Right-Hand, Y-Forward, Z-Down
+	float accelX, accelY, accelZ;
+	errorCode = mlsPeriphImuGetAccel(&accelX, &accelY, &accelZ);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+	imuDataMpu.mpuAccelX = +accelX;
+	imuDataMpu.mpuAccelY = +accelY;
+	imuDataMpu.mpuAccelZ = -accelZ;
+
+	float gyroX, gyroY, gyroZ;
+	errorCode = mlsPeriphImuGetGyro(&gyroX, &gyroY, &gyroZ);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+	imuDataMpu.mpuGyroX = -gyroX;
+	imuDataMpu.mpuGyroY = -gyroY;
+	imuDataMpu.mpuGyroZ = +gyroZ;
+
+	float magX, magY, magZ;
+	errorCode = mlsPeriphImuGetMag(&magX, &magY, &magZ);
+	if(errorCode != MLS_SUCCESS)
+	{
+		return errorCode;
+	}
+	imuDataMpu.mpuMagX = -magY;
+	imuDataMpu.mpuMagY = -magX;
+	imuDataMpu.mpuMagZ = -magZ;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsPeriphImuUpdateQuat(float deltaT)
+{
+	mlsErrorCode_t errorCode = MLS_ERROR;
+	if (imuMadgwickHandle == NULL)
 	{
 		return MLS_ERROR_NULL_PTR;
 	}
-
-	float accelX, accelY, accelZ;
-	float gyroX, gyroY, gyroZ;
-	float magX, magY, magZ;
-
-	errorCode = mlsMpu9250GetAccelScale(mpu9250Handle, &accelX, &accelY, &accelZ);
+//	errorCode = mlsImuMadgwickUpdate6Dof(imuMadgwickHandle, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, deltaT);
+	errorCode = mlsImuMadgwickUpdate9Dof(imuMadgwickHandle,
+			imuDataMpu.mpuGyroX, imuDataMpu.mpuGyroY, imuDataMpu.mpuGyroZ,
+			imuDataMpu.mpuAccelX, imuDataMpu.mpuAccelY, imuDataMpu.mpuAccelZ,
+			imuDataMpu.mpuMagX, imuDataMpu.mpuMagY, imuDataMpu.mpuMagZ, deltaT);
 	if(errorCode != MLS_SUCCESS)
 	{
 		return errorCode;
 	}
 
-	errorCode = mlsMpu9250GetGyroScale(mpu9250Handle, &gyroX, &gyroY, &gyroZ);
-	if(errorCode != MLS_SUCCESS)
-	{
-		return errorCode;
-	}
-
-	errorCode = mlsAk8963GetMagScale(ak8963Handle, &magX, &magY, &magZ);
-	if(errorCode != MLS_SUCCESS)
-	{
-		return errorCode;
-	}
-
-	errorCode = mlsImuMadgwickUpdate9Dof(imuMadgwickHandle, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
-	if(errorCode != MLS_SUCCESS)
-	{
-		return errorCode;
-	}
-
-	return errorCode;
+	return MLS_SUCCESS;
 }
 
 mlsErrorCode_t mlsPeriphImuGetQuat(float *q0, float *q1, float *q2, float *q3)

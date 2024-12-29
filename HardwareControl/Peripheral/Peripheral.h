@@ -70,7 +70,6 @@ mlsErrorCode_t mlsPeriphImuInit(void);
 /*
  * @brief   Get accelerometer data.
  *
- * @param   handle: Handle structure.
  * @param   accelX: Accelerometer data x axis.
  * @param   accelY: Accelerometer data y axis.
  * @param   accelZ: Accelerometer data z axis.
@@ -84,7 +83,6 @@ mlsErrorCode_t mlsPeriphImuGetAccel(float *accelX, float *accelY, float *accelZ)
 /*
  * @brief   Get gyroscope data.
  *
- * @param   handle: Handle structure.
  * @param   gyroX: gyroscope data x axis.
  * @param   gyroY: gyroscope data y axis.
  * @param   gyroZ: gyroscope data z axis.
@@ -98,7 +96,6 @@ mlsErrorCode_t mlsPeriphImuGetGyro(float *gyroX, float *gyroY, float *gyroZ);
 /*
  * @brief   Get magnetometer data.
  *
- * @param   handle: Handle structure.
  * @param   magX: magnetometer data x axis.
  * @param   magY: magnetometer data y axis.
  * @param   magZ: magnetometer data z axis.
@@ -108,6 +105,17 @@ mlsErrorCode_t mlsPeriphImuGetGyro(float *gyroX, float *gyroY, float *gyroZ);
  *      - Others:           Fail.
  */
 mlsErrorCode_t mlsPeriphImuGetMag(float *magX, float *magY, float *magZ);
+
+/*
+ * @brief   Get accelerometer , gyroscope, magnetometer data.
+ *
+ * @param   none
+ *
+ * @return
+ *      - MLS_SUCCESS: 		Success.
+ *      - Others:           Fail.
+ */
+mlsErrorCode_t mlsPeriphImuGet9Axis(void);
 
 /*
  * @brief   Initialize UART with default parameters.
@@ -161,7 +169,7 @@ mlsErrorCode_t mlsPeriphImuFilterInit(void);
  *      - MLS_SUCCESS: 		Success.
  *      - Others:           Fail.
  */
-mlsErrorCode_t mlsPeriphImuUpdateQuat(void);
+mlsErrorCode_t mlsPeriphImuUpdateQuat(float deltaT);
 
 /*
  * @brief   Get quaternion data.

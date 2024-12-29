@@ -46,6 +46,8 @@
 #define ROS_TOPIC_VEL						"robot_vel"
 #define ROS_TOPIC_CALLBACK_VEL				"callback_robot_vel"
 
+const float magnetic_declination = -0.85;  // HCM city
+
 /********** Local Type definition section *************************************/
 #if (USE_UART_MATLAB == 1 || USE_UART_GUI == 1)
 typedef union {
@@ -57,6 +59,7 @@ typedef union {
 typedef enum {
 	UPDATE_TIME_PID = 0x00,
 	UPDATE_TIME_CONTROL_ROBOT =0x01,
+	UPDATE_TIME_UPDATE_MADGWICK =0x02,
 }updateTime_t;
 /********** Local Macro definition section ************************************/
 
@@ -76,7 +79,7 @@ static void BaseControlCallbackCommandVelocity(const geometry_msgs::Twist &callb
 /********** Local (static) variable definition section ************************/
 ros::NodeHandle rosNodeHandle;    	/*!< ROS node handle */
 char rosLogBuffer[100];          	/*!< ROS log message buffer */
-unsigned long rosPrevUpdateTime[2];	/*!< ROS previous update time */
+unsigned long rosPrevUpdateTime[3];	/*!< ROS previous update time */
 
 char imuFrameId[20];
 
@@ -133,13 +136,13 @@ static sensor_msgs::Imu BaseControlGetIMU(void)
 
 	sensor_msgs::Imu imuMsg_;
 
-	imuMsg_.angular_velocity.x = gyroX;
-	imuMsg_.angular_velocity.y = gyroY;
+	imuMsg_.angular_velocity.x = -gyroX;
+	imuMsg_.angular_velocity.y = -gyroY;
 	imuMsg_.angular_velocity.z = gyroZ;
 
 	imuMsg_.linear_acceleration.x = accelX;
 	imuMsg_.linear_acceleration.y = accelY;
-	imuMsg_.linear_acceleration.z = accelZ;
+	imuMsg_.linear_acceleration.z = -accelZ;
 
 	imuMsg_.orientation.x = q0;
 	imuMsg_.orientation.y = q1;
@@ -187,9 +190,9 @@ static sensor_msgs::MagneticField BaseControlGetMag(void)
 
 	sensor_msgs::MagneticField magMsg_;
 
-	magMsg_.magnetic_field.x = magX;
-	magMsg_.magnetic_field.y = magY;
-	magMsg_.magnetic_field.z = magZ;
+	magMsg_.magnetic_field.x = -magY;
+	magMsg_.magnetic_field.y = -magX;
+	magMsg_.magnetic_field.z = -magZ;
 
 	magMsg_.magnetic_field_covariance[0] = 0;
 	magMsg_.magnetic_field_covariance[1] = 0;
@@ -229,6 +232,7 @@ void mlsBaseControlROSSetup(void)
 
     rosPrevUpdateTime[UPDATE_TIME_PID] = mlsHardwareInfoGetTickMs();
     rosPrevUpdateTime[UPDATE_TIME_CONTROL_ROBOT] = mlsHardwareInfoGetTickMs();
+    rosPrevUpdateTime[UPDATE_TIME_UPDATE_MADGWICK] = mlsHardwareInfoGetTickMs();
 }
 
 void mlsBaseControlSpinOnce(void)
@@ -315,10 +319,29 @@ void mlsBaseControlPublishImuMsg(void)
 	float roll, pitch, yaw;
 
 	mlsPeriphImuGetQuat(&q0, &q1, &q2, &q3);
-
+//	float a12, a22, a31, a32, a33;  // rotation matrix coefficients for Euler angles and gravity components
+//    a12 = 2.0f * (q0 * q1 + q2 * q3);
+//    a22 = q3 * q3 + q0 * q0 - q1 * q1 - q2 * q2;
+//    a31 = 2.0f * (q3 * q0 + q1 * q2);
+//    a32 = 2.0f * (q1 * q2 - q3 * q1);
+//    a33 = q3 * q3 - q0 * q0 - q1 * q1 + q2 * q2;
+//
+//    roll = atan2f(a31, a33);
+//    pitch = -asinf(a32);
+//    yaw = atan2f(a12, a22);
+//
+//    roll *= 180.0f / PI;
+//    pitch *= 180.0f / PI;
+//    yaw *= 180.0f / PI;
     roll = 180.0 / 3.14 * atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 * q1 + q2 * q2));
     pitch = 180.0 / 3.14 * asin(2 * (q0 * q2 - q3 * q1));
     yaw = 180.0 / 3.14 * atan2f(q0 * q3 + q1 * q2, 0.5f - q2 * q2 - q3 * q3);
+    yaw += magnetic_declination;
+
+//    if (yaw >= +180.f)
+//    	yaw -= 360.f;
+//    else if (yaw < -180.f)
+//    	yaw += 360.f;
 
     sprintf(rosLogBuffer, "roll: %7.4f\tpitch: %7.4f\tyaw: %7.4f\t", roll, pitch, yaw);
     rosNodeHandle.loginfo(rosLogBuffer);
@@ -625,7 +648,15 @@ mlsErrorCode_t mlsBaseControlGuiReceiveData(void)
 
 mlsErrorCode_t mlsBaseControlUpdateImu(void)
 {
-	return mlsPeriphImuUpdateQuat();
+	/* Update time */
+	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_UPDATE_MADGWICK]);
+	float deltaT = stepTime * 0.001f;
+	return mlsPeriphImuUpdateQuat(deltaT);
+}
+
+mlsErrorCode_t mlsBaseControlGet9Axis(void)
+{
+	return mlsPeriphImuGet9Axis();
 }
 
 void mlsBaseControlCalculatePID(void)

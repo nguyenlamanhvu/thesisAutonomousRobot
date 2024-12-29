@@ -118,7 +118,7 @@ mlsErrorCode_t mlsImuMadgwickGetQuaternion(imuMadgwickHandle_t handle, float *q0
  *      - MLS_SUCCESS: Success.
  *      - Others:      Fail
  */
-mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az);
+mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az, float deltaT);
 
 /*
  * @brief   Update Madgwick AHRS quaternion with 9 motions.
@@ -138,7 +138,7 @@ mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, fl
  *      - MLS_SUCCESS: Success.
  *      - Others:      Fail
  */
-mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float deltaT);
 #ifdef __cplusplus
 }
 #endif
