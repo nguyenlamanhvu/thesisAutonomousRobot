@@ -66,9 +66,6 @@ mlsErrorCode_t mlsMpu9250SetConfig(mpu9250Handle_t handle, mpu9250Config_t confi
 		return MLS_ERROR_NULL_PTR;
 	}
 
-	float accelScalingFactor = (2.0f /32768.0f);
-	float gyroScalingFactor = (250.0f / 32768.0f);
-
 	/* Update accelerometer scaling factor */
 	switch(config.afsSel)
 	{
