@@ -24,15 +24,7 @@
 /********** Local Constant and compile switch definition section **************/
 
 /********** Local Type definition section *************************************/
-typedef struct motorPID {
-    float Kp;
-    float Ki;
-    float Kd;
-    float setPoint;
-    float realValue;
-    float controlValue;
-    uint16_t frequency;
-} motorPID_t;
+
 /********** Local Macro definition section ************************************/
 
 /********** Local (static) variable definition ********************************/
@@ -61,13 +53,15 @@ mlsErrorCode_t mlsMotorPIDSetConfig(motorPIDHandle_t handle, motorPIDCfg_t confi
 		return MLS_ERROR_NULL_PTR;
 	}
 
-	handle->Kd = config.Kp;
+	handle->Kp = config.Kp;
 	handle->Ki = config.Ki;
 	handle->Kd = config.Kd;
 	handle->setPoint = config.setPoint;
 	handle->realValue = 0;
 	handle->controlValue = config.controlValue;
-	handle->frequency = config.frequency;
+	handle->stepTime = config.stepTime;
+	handle->error = 0;
+	handle->preError = 0;
 
 	return MLS_SUCCESS;
 }
@@ -189,7 +183,7 @@ mlsErrorCode_t mlsMotorPIDGetSetPoint(motorPIDHandle_t handle, float *setPoint)
 	return MLS_SUCCESS;
 }
 
-mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle)
+mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle, float stepTime)
 {
 	/* Check input conditions */
 	if(handle == NULL)
@@ -197,22 +191,17 @@ mlsErrorCode_t mlsMotorPIDCalculate(motorPIDHandle_t handle)
 		return MLS_ERROR_NULL_PTR;
 	}
 
-	static float Error = 0.0;
-	static float preError = 0.0;
-	static float pre2Error = 0.0;
-	static float preOut = 0.0;
-
 	float partP, partI, partD;
 
-	pre2Error = preError;
-	preError = Error;
-	Error = handle->setPoint - handle->realValue;
-	partP = handle->Kp * (Error - preError);
-	partI = 0.5 * handle->Ki / handle->frequency * (Error + preError);
-	partD = handle->Kd * handle->frequency * (Error - 2*preError + pre2Error);
-	handle->controlValue = preOut + partP + partI + partD;
-	handle->controlValue = mlsPeriphMotorConstrain(handle->controlValue, MIN_LINEAR_VELOCITY, MAX_LINEAR_VELOCITY);
-	preOut = handle->controlValue;
+	handle->pre2Error = handle->preError;
+	handle->preError = handle->error;
+	handle->error = handle->setPoint - handle->realValue;
+	partP = handle->Kp * (handle->error - handle->preError);
+	partI = 0.5 * handle->Ki * stepTime * (handle->error + handle->preError);
+	partD = handle->Kd / stepTime * (handle->error - 2*handle->preError + handle->pre2Error);
+	handle->controlValue = handle->preOut + partP + partI + partD;
+	handle->controlValue = mlsPeriphMotorConstrain(handle->controlValue, MIN_MOTOR_VELOCITY, MAX_MOTOR_VELOCITY);
+	handle->preOut = handle->controlValue;
 
 	return MLS_SUCCESS;
 }
@@ -239,6 +228,42 @@ mlsErrorCode_t mlsMotorPIDGetControlValue(motorPIDHandle_t handle, float *contro
 	}
 
 	*controlValue = handle->controlValue;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDClearParameter(motorPIDHandle_t handle, motorPIDCfg_t config)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	handle->Kp = config.Kp;
+	handle->Ki = config.Ki;
+	handle->Kd = config.Kd;
+	handle->controlValue = 0;
+	handle->error = 0;
+	handle->preError = 0;
+	handle->realValue = 0;
+	handle->setPoint = 0;
+	handle->stepTime = 0;
+	handle->pre2Error = 0;
+	handle->preOut = 0;
+
+	return MLS_SUCCESS;
+}
+
+mlsErrorCode_t mlsMotorPIDSetControlValue(motorPIDHandle_t handle, float controlValue)
+{
+	/* Check input conditions */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	handle->controlValue = controlValue;
 
 	return MLS_SUCCESS;
 }
