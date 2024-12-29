@@ -47,7 +47,7 @@
 #define ROS_TOPIC_IMU                       "imu"
 #define ROS_TOPIC_MAG						"mag"
 #define ROS_TOPIC_VEL						"robot_vel"
-#define ROS_TOPIC_WHEEL_VEL					"robot__wheel_vel"
+#define ROS_TOPIC_WHEEL_VEL					"robot_wheel_vel"
 #define ROS_TOPIC_CALLBACK_VEL				"callback_robot_vel"
 
 const float magnetic_declination = -0.85;  // HCM city
@@ -189,10 +189,10 @@ static sensor_msgs::Imu BaseControlGetIMU(void)
 	imuMsg_.linear_acceleration.y = accelY;
 	imuMsg_.linear_acceleration.z = -accelZ;
 
-	imuMsg_.orientation.x = q0;
-	imuMsg_.orientation.y = q1;
-	imuMsg_.orientation.z = q2;
-	imuMsg_.orientation.w = q3;
+	imuMsg_.orientation.x = q1;
+	imuMsg_.orientation.y = q2;
+	imuMsg_.orientation.z = q3;
+	imuMsg_.orientation.w = q0;
 
 	imuMsg_.angular_velocity_covariance[0] = 0;
 	imuMsg_.angular_velocity_covariance[1] = 0;
@@ -540,9 +540,15 @@ void mlsBaseControlPublishMortorVelocityMsg(void)
 	/* Publish motor velocity message to "robot_vel" topic*/
 	velPub.publish(&velocityMsg);
 
+#if(0)	//Test wheelVelocityMsg
+	goalMotorVelocity[LEFT] = 100;
+	goalMotorVelocity[RIGHT] = -100;
+#endif
 	/* Get wheel velocity (RPM) */
-	wheelVelocityMsg.data[LEFT] = goalMotorVelocity[LEFT];
-	wheelVelocityMsg.data[RIGHT] = goalMotorVelocity[RIGHT];
+//	wheelVelocityMsg.data[LEFT] = goalMotorVelocity[LEFT];
+//	wheelVelocityMsg.data[RIGHT] = goalMotorVelocity[RIGHT];
+	wheelVelocityMsg.data_length = 2;
+	wheelVelocityMsg.data = goalMotorVelocity;
 
 	/* Publish wheel velocity message to "robot_wheel_vel" topic*/
 	wheelVelPub.publish(&wheelVelocityMsg);
