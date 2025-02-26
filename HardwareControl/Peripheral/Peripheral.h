@@ -29,9 +29,9 @@ extern "C"
 #include "compilerSwitch.h"
 /********** Constant  and compile switch definition section *******************/
 /* Robot parameters */
-#define WHEEL_RADIUS                0.033                                   /*!< Wheel radius in meter */
-#define WHEEL_SEPARATION            0.165                                   /*!< Wheel separate distance in meter */
-#define TURNING_RADIUS              0.08                                    /*!< Turning radius in meter */
+#define WHEEL_RADIUS                0.0855	                                /*!< Wheel radius in meter */
+#define WHEEL_SEPARATION            0.385                                   /*!< Wheel separate distance in meter */
+#define TURNING_RADIUS              0.19                                    /*!< Turning radius in meter */
 #define MAX_LINEAR_VELOCITY         (WHEEL_RADIUS * 2 * PI * 80 / 60)       /*!< Max linear velocity */			//(RPM max: 80)
 #define MAX_ANGULAR_VELOCITY        (MAX_LINEAR_VELOCITY / TURNING_RADIUS)  /*!< Max angular velocity */
 #define MIN_LINEAR_VELOCITY         -MAX_LINEAR_VELOCITY                    /*!< Min linear velocity */

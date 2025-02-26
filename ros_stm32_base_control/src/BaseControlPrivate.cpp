@@ -48,7 +48,7 @@
 #define ROS_TOPIC_MAG						"mag"
 #define ROS_TOPIC_VEL						"robot_vel"
 #define ROS_TOPIC_WHEEL_VEL					"robot_wheel_vel"
-#define ROS_TOPIC_CALLBACK_VEL				"callback_robot_vel"
+#define ROS_TOPIC_CALLBACK_VEL				"cmd_vel"
 
 const float magnetic_declination = -0.85;  // HCM city
 #define ROS_TOPIC_JOINT_STATES              "joint_states"
@@ -367,9 +367,9 @@ void mlsBaseControlROSSetup(void)
 
     rosNodeHandle.advertise(imuPub);			/*!< Register the publisher to "imu" topic */
     rosNodeHandle.advertise(magPub);			/*!< Register the publisher to "mag" topic */
-    rosNodeHandle.advertise(velPub);			/*!< Register the publisher to "robot_vel" topic */
-    rosNodeHandle.advertise(odomPub);          	/*!< Register the publisher to "odom" topic */
-    rosNodeHandle.advertise(jointStatesPub);  	/*!< Register the publisher to "joint_states" topic */
+//    rosNodeHandle.advertise(velPub);			/*!< Register the publisher to "robot_vel" topic */
+//    rosNodeHandle.advertise(odomPub);          	/*!< Register the publisher to "odom" topic */
+//    rosNodeHandle.advertise(jointStatesPub);  	/*!< Register the publisher to "joint_states" topic */
     rosNodeHandle.advertise(wheelVelPub);		/*!< Register the publisher to "robot_wheel_vel" topic */
 
     tf_broadcaster.init(rosNodeHandle); /*!< Init TransformBroadcaster */
@@ -533,12 +533,12 @@ void mlsBaseControlPublishImuMsg(void)
 
 void mlsBaseControlPublishMortorVelocityMsg(void)
 {
-	/* Get motor velocity */
-	velocityMsg.linear.x = goalVelocity[LINEAR];
-	velocityMsg.angular.z = goalVelocity[ANGULAR];
-
-	/* Publish motor velocity message to "robot_vel" topic*/
-	velPub.publish(&velocityMsg);
+//	/* Get motor velocity */
+//	velocityMsg.linear.x = goalVelocity[LINEAR];
+//	velocityMsg.angular.z = goalVelocity[ANGULAR];
+//
+//	/* Publish motor velocity message to "robot_vel" topic*/
+//	velPub.publish(&velocityMsg);
 
 #if(0)	//Test wheelVelocityMsg
 	goalMotorVelocity[LEFT] = 100;
@@ -547,8 +547,11 @@ void mlsBaseControlPublishMortorVelocityMsg(void)
 	/* Get wheel velocity (RPM) */
 //	wheelVelocityMsg.data[LEFT] = goalMotorVelocity[LEFT];
 //	wheelVelocityMsg.data[RIGHT] = goalMotorVelocity[RIGHT];
+	float tempVelocity[2];
+	tempVelocity[0] = goalMotorVelocity[0];
+	tempVelocity[1] = goalMotorVelocity[1];
 	wheelVelocityMsg.data_length = 2;
-	wheelVelocityMsg.data = goalMotorVelocity;
+	wheelVelocityMsg.data = tempVelocity;
 
 	/* Publish wheel velocity message to "robot_wheel_vel" topic*/
 	wheelVelPub.publish(&wheelVelocityMsg);
@@ -556,26 +559,26 @@ void mlsBaseControlPublishMortorVelocityMsg(void)
 
 void mlsBaseControlPublishDriveInformationMsg(void)
 {
-	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PUBLISH_DRIVE]);
-	ros::Time stamp_now = BaseControlGetROSTime();
-
-	/* Calculate odometry */
-	BaseControlCalcOdom((float)(stepTime * 0.001f));
-
-	/* Publish odometry message */
-	BaseControlUpdateOdom();
-	odometryMsg.header.stamp = stamp_now;
-	odomPub.publish(&odometryMsg);
-
-	/* Publish TF message */
-	BaseControlUpdateTf(odom_tf);
-	odom_tf.header.stamp = stamp_now;
-	tf_broadcaster.sendTransform(odom_tf);
-
-	/* Publish jointStates message */
-	BaseControlUpdateJointState();
-	joint_states.header.stamp = stamp_now;
-	jointStatesPub.publish(&joint_states);
+//	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PUBLISH_DRIVE]);
+//	ros::Time stamp_now = BaseControlGetROSTime();
+//
+//	/* Calculate odometry */
+//	BaseControlCalcOdom((float)(stepTime * 0.001f));
+//
+//	/* Publish odometry message */
+//	BaseControlUpdateOdom();
+//	odometryMsg.header.stamp = stamp_now;
+//	odomPub.publish(&odometryMsg);
+//
+//	/* Publish TF message */
+//	BaseControlUpdateTf(odom_tf);
+//	odom_tf.header.stamp = stamp_now;
+//	tf_broadcaster.sendTransform(odom_tf);
+//
+//	/* Publish jointStates message */
+//	BaseControlUpdateJointState();
+//	joint_states.header.stamp = stamp_now;
+//	jointStatesPub.publish(&joint_states);
 }
 
 void mlsBaseControlUpdateGoalVel(void)
@@ -911,23 +914,25 @@ mlsErrorCode_t mlsBaseControlGet9Axis(void)
 	return mlsPeriphImuGet9Axis();
 }
 
+int32_t leftTick, rightTick;
+uint32_t stepTimeTest;
 void mlsBaseControlCalculatePID(void)
 {
-	int32_t leftTick, rightTick;
+
 	/* Update time */
-	uint32_t stepTime = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
+	stepTimeTest = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
 	/* Get tick from encoder */
 	mlsPeriphEncoderLeftGetTick(&leftTick);
 	mlsPeriphEncoderRightGetTick(&rightTick);
 	/* Calculate linear velocity of 2 motors*/
-	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTime, &goalMotorVelocity[LEFT]);
-	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTime, &goalMotorVelocity[RIGHT]);
+	mlsPeriphMotorLeftCalculateVelocity(leftTick, stepTimeTest, &goalMotorVelocity[LEFT]);
+	mlsPeriphMotorRightCalculateVelocity(rightTick, stepTimeTest, &goalMotorVelocity[RIGHT]);
 	/* Update real value to PID controller */
 	mlsPeriphMotorLeftPIDUpdateRealValue(goalMotorVelocity[LEFT]);
 	mlsPeriphMotorRightPIDUpdateRealValue(goalMotorVelocity[RIGHT]);
 	/* Calculate PID */
-	mlsPeriphMotorLeftPIDCalculate(stepTime);
-	mlsPeriphMotorRightPIDCalculate(stepTime);
+	mlsPeriphMotorLeftPIDCalculate(stepTimeTest);
+	mlsPeriphMotorRightPIDCalculate(stepTimeTest);
 }
 
 uint32_t mlsBaseControlGetControlVelocityTime(void)

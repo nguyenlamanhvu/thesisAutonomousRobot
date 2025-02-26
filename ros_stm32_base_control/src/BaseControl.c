@@ -70,7 +70,7 @@ mlsErrorCode_t mlsBaseControlMain(void)
 
 #if (USE_UART_ROS == 1)
 	/* Update variable */
-	mlsBaseControlUpdateVariable(mlsBaseControlConnectStatus());
+//	mlsBaseControlUpdateVariable(mlsBaseControlConnectStatus());
 
 	/* Update TF */
 	mlsBaseControlUpdateTfPrefix(mlsBaseControlConnectStatus());
@@ -79,14 +79,15 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	if(gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] == 1)
 	{
 		mlsBaseControlUpdateGoalVel();
-		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
-		{
-			mlsBaseControlSetVelocityZero();
-		}
-		else
-		{
-			mlsBaseControlSetVelocityGoal();
-		}
+//		if(mlsBaseControlGetControlVelocityTime() > CONTROL_MOTOR_TIMEOUT)
+//		{
+//			mlsBaseControlSetVelocityZero();
+//		}
+//		else
+//		{
+//			mlsBaseControlSetVelocityGoal();
+//		}
+		mlsBaseControlSetVelocityGoal();
 		mlsBaseControlCalculatePID();
 		mlsBaseControlSetControlValue();
 		gBaseControlTimeUpdateFlag[CONTROL_MOTOR_TIME_INDEX] = 0;
@@ -100,12 +101,12 @@ mlsErrorCode_t mlsBaseControlMain(void)
 	}
 
 	/* Publish driver information */
-	if(gBaseControlTimeUpdateFlag[DRIVE_INFORMATION_TIME_INDEX] == 1)
-	{
-		/* Publish Odom, TF and JointState, */
-		mlsBaseControlPublishDriveInformationMsg();
-		gBaseControlTimeUpdateFlag[DRIVE_INFORMATION_TIME_INDEX] = 0;
-	}
+//	if(gBaseControlTimeUpdateFlag[DRIVE_INFORMATION_TIME_INDEX] == 1)
+//	{
+//		/* Publish Odom, TF and JointState, */
+//		mlsBaseControlPublishDriveInformationMsg();
+//		gBaseControlTimeUpdateFlag[DRIVE_INFORMATION_TIME_INDEX] = 0;
+//	}
 
 	/* Update IMU */
 	if(gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] == 1)
