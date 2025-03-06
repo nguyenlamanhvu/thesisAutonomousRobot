@@ -77,6 +77,8 @@ typedef enum {
 extern dataFrame_t gGuiRxDataFrame;
 extern dataFrame_t gGuiTxDataFrame;
 #endif
+
+extern imuData_t	imuDataMpu;
 /********** Local (static) function declaration section ***********************/
 static sensor_msgs::Imu BaseControlGetIMU(void);
 static sensor_msgs::MagneticField BaseControlGetMag(void);
@@ -171,28 +173,28 @@ static uint32_t BaseControlGetElaspedTime(uint32_t *time)
 
 static sensor_msgs::Imu BaseControlGetIMU(void)
 {
-	float accelX, accelY, accelZ;
-	float gyroX, gyroY, gyroZ;
-	float q0, q1, q2, q3;
+//	float accelX, accelY, accelZ;
+//	float gyroX, gyroY, gyroZ;
+//	float q0, q1, q2, q3;
 
-	mlsPeriphImuGetAccel(&accelX, &accelY, &accelZ);
-	mlsPeriphImuGetGyro(&gyroX, &gyroY, &gyroZ);
-	mlsPeriphImuGetQuat(&q0, &q1, &q2, &q3);
+//	mlsPeriphImuGetAccel(&accelX, &accelY, &accelZ);
+//	mlsPeriphImuGetGyro(&gyroX, &gyroY, &gyroZ);
+//	mlsPeriphImuGetQuat(&q0, &q1, &q2, &q3);
 
 	sensor_msgs::Imu imuMsg_;
 
-	imuMsg_.angular_velocity.x = -gyroX;
-	imuMsg_.angular_velocity.y = -gyroY;
-	imuMsg_.angular_velocity.z = gyroZ;
+	imuMsg_.angular_velocity.x = imuDataMpu.mpuGyroX;
+	imuMsg_.angular_velocity.y = imuDataMpu.mpuGyroY;
+	imuMsg_.angular_velocity.z = imuDataMpu.mpuGyroZ;
 
-	imuMsg_.linear_acceleration.x = accelX;
-	imuMsg_.linear_acceleration.y = accelY;
-	imuMsg_.linear_acceleration.z = -accelZ;
+	imuMsg_.linear_acceleration.x = imuDataMpu.mpuAccelX;
+	imuMsg_.linear_acceleration.y = imuDataMpu.mpuAccelY;
+	imuMsg_.linear_acceleration.z = imuDataMpu.mpuAccelZ;
 
-	imuMsg_.orientation.x = q1;
-	imuMsg_.orientation.y = q2;
-	imuMsg_.orientation.z = q3;
-	imuMsg_.orientation.w = q0;
+	imuMsg_.orientation.x = imuDataMpu.mpuQuat.x;
+	imuMsg_.orientation.y = imuDataMpu.mpuQuat.y;
+	imuMsg_.orientation.z = imuDataMpu.mpuQuat.z;
+	imuMsg_.orientation.w = imuDataMpu.mpuQuat.w;
 
 	imuMsg_.angular_velocity_covariance[0] = 0;
 	imuMsg_.angular_velocity_covariance[1] = 0;
@@ -921,6 +923,7 @@ void mlsBaseControlCalculatePID(void)
 
 	/* Update time */
 	stepTimeTest = BaseControlGetElaspedTime(&rosPrevUpdateTime[UPDATE_TIME_PID]);
+	if(stepTimeTest <= 2)	return;
 	/* Get tick from encoder */
 	mlsPeriphEncoderLeftGetTick(&leftTick);
 	mlsPeriphEncoderRightGetTick(&rightTick);

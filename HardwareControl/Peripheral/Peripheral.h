@@ -27,6 +27,7 @@ extern "C"
 /********** Include section ***************************************************/
 #include "errorCode.h"
 #include "compilerSwitch.h"
+#include "bno055.h"
 /********** Constant  and compile switch definition section *******************/
 /* Robot parameters */
 #define WHEEL_RADIUS                0.0855	                                /*!< Wheel radius in meter */
@@ -61,7 +62,19 @@ extern "C"
 
 #define PI                  3.14159265359
 /********** Type definition section *******************************************/
-
+typedef struct {
+	float 				mpuAccelX;
+	float				mpuAccelY;
+	float				mpuAccelZ;
+	float 				mpuGyroX;
+	float				mpuGyroY;
+	float				mpuGyroZ;
+	float 				mpuMagX;
+	float				mpuMagY;
+	float				mpuMagZ;
+	bno055_euler_t		mpuEuler;
+	bno055_vec4_t		mpuQuat;
+}imuData_t;
 /********** Macro definition section*******************************************/
 
 /********** Function declaration section **************************************/

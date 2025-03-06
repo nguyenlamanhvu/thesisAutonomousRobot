@@ -44,9 +44,9 @@ mlsErrorCode_t mlsBaseControlInit(void)
 	mlsErrorCode_t errorCode = MLS_ERROR;
 	/* Initialize peripherals */
 	errorCode = mlsPeriphImuInit();
-#if USE_MADGWICK_FILTER
-	errorCode = mlsPeriphImuFilterInit();
-#endif
+//#if USE_MADGWICK_FILTER
+//	errorCode = mlsPeriphImuFilterInit();
+//#endif
 	errorCode = mlsPeriphMotorInit();
 	errorCode = mlsPeriphEncoderInit();
 	errorCode = mlsPeriphMotorPIDInit();
@@ -114,13 +114,13 @@ mlsErrorCode_t mlsBaseControlMain(void)
 		mlsBaseControlGet9Axis();
 		gBaseControlTimeUpdateFlag[IMU_UPDATE_TIME_INDEX] = 0;
 	}
-
-	/* Calculate filter IMU */
-	if(gBaseControlTimeUpdateFlag[IMU_USING_FILTER_INDEX] == 1)
-	{
-		mlsBaseControlUpdateImu();
-		gBaseControlTimeUpdateFlag[IMU_USING_FILTER_INDEX] = 0;
-	}
+//
+//	/* Calculate filter IMU */
+//	if(gBaseControlTimeUpdateFlag[IMU_USING_FILTER_INDEX] == 1)
+//	{
+//		mlsBaseControlUpdateImu();
+//		gBaseControlTimeUpdateFlag[IMU_USING_FILTER_INDEX] = 0;
+//	}
 
 	/* Publish IMU data to topic "imu"*/
 	if(gBaseControlTimeUpdateFlag[IMU_PUBLISH_TIME_INDEX] == 1)

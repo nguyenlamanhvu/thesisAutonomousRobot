@@ -126,6 +126,24 @@ mlsErrorCode_t mlsHardwareInfoAk8963ReadBytes(uint8_t regAddr, uint8_t *buffer, 
 mlsErrorCode_t mlsHardwareInfoAk8963WriteBytes(uint8_t regAddr, uint8_t *buffer, uint16_t len);
 
 /*
+ * @brief Read data from BNO055
+ * @param[1] address of register in BNO055
+ * @param[2] buffer which store data
+ * @param[3] length of data
+ * @return Error Code
+ */
+mlsErrorCode_t mlsHardwareInfoBno055ReadBytes(uint8_t regAddr, uint8_t *buffer, uint16_t len);
+
+/*
+ * @brief Write data from BNO055
+ * @param[1] address of register in BNO055
+ * @param[2] buffer which store data
+ * @param[3] length of data
+ * @return Error Code
+ */
+mlsErrorCode_t mlsHardwareInfoBno055WriteBytes(uint8_t regAddr, uint8_t *buffer, uint16_t len);
+
+/*
  * @brief Read data from UART
  * @param[1] buffer which store data
  * @param[2] length of data

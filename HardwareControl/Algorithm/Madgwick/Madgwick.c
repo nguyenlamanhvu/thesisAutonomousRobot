@@ -138,10 +138,12 @@ mlsErrorCode_t mlsImuMadgwickUpdate6Dof(imuMadgwickHandle_t handle, float gx, fl
 	float qDot1, qDot2, qDot3, qDot4;
 	float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2 , _8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
 
+#if defined(USE_ACC_GYRO_MPU9250)
 	// Convert gyroscope degrees/sec to radians/sec
 	gx *= 0.0174533f;
 	gy *= 0.0174533f;
 	gz *= 0.0174533f;
+#endif
 
 	// Rate of change of quaternion from gyroscope
 	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
@@ -235,10 +237,12 @@ mlsErrorCode_t mlsImuMadgwickUpdate9Dof(imuMadgwickHandle_t handle, float gx, fl
 		return mlsImuMadgwickUpdate6Dof(handle, gx, gy, gz, ax, ay, az, deltaT);
 	}
 
+#if defined(USE_ACC_GYRO_MPU9250) && defined(USE_MAGNETOMETER_MPU9250)
 	// Convert gyroscope degrees/sec to radians/sec
 	gx *= 0.0174533f;
 	gy *= 0.0174533f;
 	gz *= 0.0174533f;
+#endif
 
 	// Rate of change of quaternion from gyroscope
 	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
