@@ -21,6 +21,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "gpio.h"
 #include "HardwareInfo.h"
 /********** Local Constant and compile switch definition section **************/
 extern uint8_t systemSensor, gyro, accel, mag;
@@ -39,6 +40,19 @@ static mlsErrorCode_t bno055_set_unit(bno055Handle_t handle, const bno055_temp_u
                           const bno055_acc_unitsel_t a_unit,
                           const bno055_eul_unitsel_t e_unit);
 /********** Local function definition section *********************************/
+static mlsErrorCode_t bno055_HW_reset(bno055Handle_t handle) {
+	/* Check if handle structure is NULL */
+	if(handle == NULL)
+	{
+		return MLS_ERROR_NULL_PTR;
+	}
+
+	HAL_GPIO_WritePin(RESET_IMU_PIN_GPIO_Port, RESET_IMU_PIN_Pin, 0);
+	HAL_Delay(100);
+	HAL_GPIO_WritePin(RESET_IMU_PIN_GPIO_Port, RESET_IMU_PIN_Pin, 1);
+    return MLS_SUCCESS;
+}
+
 static mlsErrorCode_t bno055_reset(bno055Handle_t handle) {
 	/* Check if handle structure is NULL */
 	if(handle == NULL)
@@ -177,6 +191,10 @@ mlsErrorCode_t mlsBno055Config(bno055Handle_t handle)
 	mlsErrorCode_t errorCode = MLS_ERROR;
     u8 id = 0;
 //    error_bno err;
+
+    if ((errorCode = bno055_HW_reset(handle)) != MLS_SUCCESS) {
+		return errorCode;
+	}
 
     errorCode = handle->i2cRead(BNO_CHIP_ID, &id, 1);
     if (errorCode != MLS_SUCCESS || id != BNO_DEF_CHIP_ID) {

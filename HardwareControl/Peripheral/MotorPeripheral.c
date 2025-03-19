@@ -48,13 +48,13 @@
 #define DEFAULT_MOTOR_FREQUENCY		12500
 
 /* PID default value */
-#define MOTOR_LEFT_KP		1.68
-#define MOTOR_LEFT_KI		4.5
-#define MOTOR_LEFT_KD		0.00175
+#define MOTOR_LEFT_KP		0.68
+#define MOTOR_LEFT_KI		1.3
+#define MOTOR_LEFT_KD		0.0005
 
-#define MOTOR_RIGHT_KP		1.68
-#define MOTOR_RIGHT_KI		4.5
-#define MOTOR_RIGHT_KD		0.00175
+#define MOTOR_RIGHT_KP		0.68
+#define MOTOR_RIGHT_KI		1.3
+#define MOTOR_RIGHT_KD		0.0005
 /********** Local (static) variable definition ********************************/
 motorHandle_t motorLeftHandle = NULL;
 motorHandle_t motorRightHandle = NULL;

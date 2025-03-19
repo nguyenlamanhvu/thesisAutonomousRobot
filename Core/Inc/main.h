@@ -57,6 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define RESET_IMU_PIN_Pin GPIO_PIN_15
+#define RESET_IMU_PIN_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 
